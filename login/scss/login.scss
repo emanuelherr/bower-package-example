@@ -1,0 +1,102 @@
+@charset "UTF-8";
+
+.login-screen {
+  ion-content {
+    padding: 5%;
+
+    #version-footer {
+      position: fixed;
+      left: 5%;
+      bottom: 5%;
+      color: #999999;
+    }
+  }
+
+  .login-box {
+    background: white;
+    padding: 24px;
+    border-style: solid;
+    border-radius: 4px;
+    border-color: rgba(107, 99, 99, 0.24);
+    border-width: 1px;
+  }
+
+  .text-align-center {
+    text-align: center;
+  }
+
+  .text-align-right {
+    text-align: right;
+  }
+
+  label {
+    margin: 10px 0 0 !important;
+  }
+
+  .messages-hidden {
+    visibility: hidden;
+  }
+
+  .messages .item {
+    white-space: normal !important;
+    padding: 0 !important;
+    background: white !important;
+    font-size: 14px;
+  }
+
+  .error-input {
+    border-color: red
+  }
+
+  .logo {
+    text-align: center;
+    padding: 0px 50px 0px 50px;
+
+    img {
+      max-width: 300px;
+      width: 100%;
+    }
+  }
+
+  button {
+    height: 37px;
+    width: 100%;
+  }
+
+  .col {
+    padding: 0;
+  }
+
+  .login-button {
+    margin-top: 10px;
+    color: white;
+    background-color: #8ac341;
+    border: 0;
+    font-weight: 700;
+    font-size: 20px;
+    height: 47px;
+  }
+  .login-footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+  }
+
+  .label-footer {
+    color: grey;
+    font-size: 12px;
+  }
+
+  ::-webkit-input-placeholder {
+    font-style: normal;
+  }
+
+  .forgot-password {
+    padding-top: 20px;
+    width: 100%;
+    text-align: center;
+    font-size: 18px;
+    font-style: italic;
+    color: #BDBEC0;
+  }
+}

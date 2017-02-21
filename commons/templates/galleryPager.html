@@ -1,0 +1,8 @@
+<div class="slider-pager" style="background-color: red;">
+    <span class="slider-pager-page"
+          ng-repeat="slide in numSlides() track by $index"
+          ng-class="{active: $index == currentSlide}"
+          ng-click="pagerClick($index)">
+        <i class="icon ion-record"></i>
+    </span>
+</div>

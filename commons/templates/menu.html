@@ -1,0 +1,26 @@
+<ion-side-menus enable-menu-with-back-views="true">
+    <ion-pane ion-side-menu-content>
+        <ion-nav-view name="menuContent"></ion-nav-view>
+
+    </ion-pane>
+
+    <ion-side-menu side="right" is-enabled="displaySideMenu">
+        <ion-header-bar class="bar-stable">
+            <h1 class="title">Settings</h1>
+        </ion-header-bar>
+        <ion-content>
+            <ion-list>
+                <ion-item nav-clear menu-close ui-sref="e30.menu">
+                    App Selector
+                </ion-item>
+                <ion-item nav-clear menu-close ng-click="userLogout()">
+                    Logout
+                </ion-item>
+                <ion-item nav-clear menu-close ng-click="exit()">
+                    Exit
+                </ion-item>
+            </ion-list>
+            <div style="position: absolute; left: 5%; color: #999999;">{{appVersion}}</div>
+        </ion-content>
+    </ion-side-menu>
+</ion-side-menus>

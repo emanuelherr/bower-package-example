@@ -1,0 +1,133 @@
+{
+  "OCF": {
+    "LOGIN": {
+      "USERNAME_PLACEHOLDER": "Usuario",
+      "PASSWORD_PLACEHOLDER": "Contraseña",
+      "LOGIN_BUTTON": "ACCEDER",
+      "FORGOT_PASSWORD": "¿Olvidó su contraseña?",
+
+      "NOTIFICATIONS": {
+        "VERIFYING_CREDENTIALS": "Validando credenciales",
+        "REMOTE_STORAGE_VERIFICATION": "Validación de almacenamiento remoto",
+        "SETTING_UP": "Preparando entorno..."
+      }
+    },
+
+    "APP_UPDATE": {
+      "LOADING": {
+        "DOWNLOADING": "Descargando Actualizaciones"
+      },
+
+      "ALERTS": {
+        "DOWNLOAD_FAILED": "Actualización de Aplicación. Falló la Descarga.",
+        "UNABLE_TO_REACH_SERVER": "Actualización de Aplicación. No se pudo acceder al servidor.",
+        "FAIL_TO_INSTALL": "Instalación de Aplicación. Falló la instalación de la última versión."
+      }
+    },
+
+    "LOCATION_SELECTION": {
+      "TITLE": "SELECCIONE UBICACIÓN",
+      "BUTTON_CONTINUE": "Seguir"
+    },
+
+    "APP_SELECTION": {
+      "TITLE": "SELECCIONE APLICACIÓN",
+      "BUTTON_CONTINUE": "Seguir"
+    },
+
+    "PASSWORD": {
+      "CHANGE": {
+        "TITLE": "CAMBIO DE CONTRASEÑA",
+        "CURRENT_PLACEHOLDER": "Contraseña actual",
+        "NEW_PLACEHOLDER": "Nueva Contraseña",
+        "STRENGTH_LABEL": "Fuerza de la Contraseña",
+        "CONFIRM_PLACEHOLDER": "Confirme Nueva Contraseña",
+        "BUTTON_CHANGE": "CAMBIAR CONTRASEÑA",
+        "PROCESSING": "Procesando contraseñas...",
+
+        "SUCCESS": {
+          "MAIN_MESSAGE": "ÉXITO",
+          "FIRST_PARAGRAPH": "Su contraseña fue cambiada con éxtio.",
+          "SECOND_PARAGRAPH": "Por favor, vuelva a acceder para seguir utilizando esta aplicación.",
+          "BUTTON_LOGIN": "ACCEDER"
+        },
+
+        "STRENGTH_METER": {
+          "WEAK": "Débil",
+          "FAIR": "Suficiente",
+          "STRONG": "Fuerte"
+        },
+
+        "LEGEND": {
+          "MUST": "LA CONTRASEÑA DEBE",
+          "MUST_NOT": "LA CONTRASEÑA NO DEBE",
+          "USED": "haber sido utilizada previamente.",
+          "DICT_WORD": "La contraseña contiene la palabra '{{dictWord}}' del diccionario.",
+          "DYNAMIC": {
+            "MIN_DIGIT": "número",
+            "MIN_UPPERCASE": "letra mayúscula",
+            "MIN_LOWERCASE": "letra minúscula",
+            "MIN_SPECIAL": "caracter especial",
+            "BE_AT_LEAST_SINGLE": "ser al lo menos de un caracter de largo",
+            "BE_AT_LEAST_MULTIPLE": "ser al menos {{number}} caracteres de largo",
+            "CONTAIN_AT_LEAST": "contener al menos",
+            "AND": "y"
+          },
+
+          "ERRORS": {
+            "INVALID_PASSWORD": "Contraseña Inválida",
+            "INCORRECT_PASSWORD": "Contraseña Incorrecta",
+            "NO_MATCH_PASSWORD": "Las contraseñas no coinciden",
+            "NO_CONNECTION": "Sin conexión"
+          }
+        }
+      },
+
+      "FORGOT": {
+        "TITLE": "CAMBIAR CONTRASEÑA",
+        "QUESTION": "¿OLVIDÓ SU CONTRASEÑA?",
+        "MESSAGE": "Ingrese su nombre de usuario y le enviaremos un enlace por email para cambiar su contraseña.",
+        "USERNAME_PLACEHOLDER": "Nombre de Usuario",
+        "BUTTON_SUBMIT": "ENVIAR",
+        "PROCESSING": "Procesando Nombre de Usuario...",
+
+        "SUCCESS": {
+          "MAIN_MESSAGE": "COMPRUEBE SU EMAIL",
+          "FIRST_PARAGRAPH": "Si el nombre de usuario ingresado es válido, recibirá un email con un enlace para cambiar su contraseña.",
+          "BUTTON_OKAY": "BIEN"
+        },
+
+        "ERRORS": {
+          "SERVER_ERROR": "Error de Servidor",
+          "NO_CONNECTION": "@:OCF.PASSWORD.CHANGE.LEGEND.ERRORS.NO_CONNECTION"
+        }
+      }
+    },
+
+    "NO_CONNECTIVITY_POPUP": {
+      "HEADER": "Error en la Conexión",
+      "MESSAGE": "Scanee otra vez o presione Reintentar",
+      "CLOSE_BUTTON": "Cerrar",
+      "RETRY_BUTTON": "Reintentar"
+    },
+
+    "TOASTER": {
+      "INVALID_INPUT": "Entrada Inválida",
+      "MESSAGE": "Scanee el ZIPR Tag ID"
+    },
+
+    "AUTO_LOGOUT": {
+      "HEADER": "Ingrese para continuar",
+      "MESSAGE_FIRST_ROW": "Usted ha salido del sistema por",
+      "MESSAGE_SECOND_ROW": "razones de seguridad.",
+      "BUTTON" : "Seguir"
+    },
+
+    "LOADING_SERVICE": {
+      "RETRIEVING": "Recuperando Información",
+      "REOPENING": "Reabriendo Orden",
+      "CLOSING": "Cerrando Orden",
+      "LOADING": "Cargando ..."
+    }
+  }
+}

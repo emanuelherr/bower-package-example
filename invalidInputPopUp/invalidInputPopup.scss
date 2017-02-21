@@ -1,0 +1,54 @@
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.3) !important;
+}
+
+.invalidInput-popup {
+  min-height: 0;
+  height: 175px;
+  max-width: 230px;
+  border-radius: 6px;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 28%;
+  margin: 0 auto;
+  background-color: $retailer-gray-90;
+
+  .row-message-header {
+    height: 50px;
+  }
+
+  .row-message-sub-header {
+    height: 50px;
+  }
+
+  .row-icon {
+    height: 70px;
+    padding-top: 20px;
+  }
+
+  /*.row + .row {
+    margin-top: 0 !important;
+    padding: 5px !important;
+  }*/
+
+  .invalidInput-message {
+    @include roboto;
+    font-weight: bold;
+    font-size: 25px;
+    color: white;
+  }
+
+  .invalidInput-sub-message {
+    @include roboto;
+    font-weight: normal;
+    color: $retailer-gray-50;
+    font-size: 25px;
+    font-style: italic;
+  }
+
+  .invalidInput-icon {
+    color: white;
+    font-size: 35px;
+  }
+}

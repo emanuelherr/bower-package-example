@@ -1,0 +1,20 @@
+{
+  "name": "bower-package-example-ema",
+  "homepage": "https://github.com/emanuelherr/bower-package-example",
+  "authors": [
+    "eherrmann <emanuelherrmann@gmail.com>"
+  ],
+  "description": "bower-example",
+  "main": "ocf.js",
+  "keywords": [
+    "example"
+  ],
+  "license": "none",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

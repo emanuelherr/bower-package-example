@@ -1,0 +1,135 @@
+{
+  "OCF": {
+    "LOGIN": {
+      "USERNAME_PLACEHOLDER": "Username",
+      "PASSWORD_PLACEHOLDER": "Password",
+      "LOGIN_BUTTON": "Login",
+      "FORGOT_PASSWORD": "Forgot your password?",
+
+      "NOTIFICATIONS": {
+        "VERIFYING_CREDENTIALS": "Verifying credentials",
+        "REMOTE_STORAGE_VERIFICATION": "Remote storage verification",
+        "SETTING_UP": "Setting up..."
+      }
+    },
+
+    "APP_UPDATE": {
+      "LOADING": {
+        "DOWNLOADING": "Downloading Updates"
+      },
+
+      "ALERTS": {
+        "DOWNLOAD_FAILED": "App Update. Download Failed.",
+        "UNABLE_TO_REACH_SERVER": "App Update. Unable to reach server.",
+        "UNABLE_TO_ACCESS_STORAGE": "App Update. Unable to access App storage.",
+        "FAIL_TO_INSTALL": "App Install. Failed to install the latest App."
+      }
+    },
+
+    "LOCATION_SELECTION": {
+      "TITLE": "SELECT LOCATION",
+      "BUTTON_CONTINUE": "Continue"
+    },
+
+    "APP_SELECTION": {
+      "TITLE": "SELECT APP",
+      "BUTTON_CONTINUE": "Continue"
+    },
+
+    "PASSWORD": {
+      "CHANGE": {
+        "TITLE": "CHANGE PASSWORD",
+        "CURRENT_PLACEHOLDER": "Current Password",
+        "NEW_PLACEHOLDER": "New Password",
+        "STRENGTH_LABEL": "Password Strength",
+        "CONFIRM_PLACEHOLDER": "Confirm New Password",
+        "BUTTON_CHANGE": "CHANGE PASSWORD",
+        "PROCESSING": "Processing passwords...",
+
+        "SUCCESS": {
+          "MAIN_MESSAGE": "SUCCESS",
+          "FIRST_PARAGRAPH": "Your password was successfully changed.",
+          "SECOND_PARAGRAPH": "Please log back in to continue using this app.",
+          "BUTTON_LOGIN": "LOGIN"
+        },
+
+        "STRENGTH_METER": {
+          "WEAK": "Weak",
+          "FAIR": "Fair",
+          "STRONG": "Strong"
+        },
+
+        "LEGEND": {
+          "MUST": "YOUR PASSWORD MUST",
+          "MUST_NOT": "YOUR PASSWORD MUST NOT",
+          "USED": "be previously used.",
+          "DICT_WORD": "Password contains the dictionary word '{{dictWord}}'.",
+
+          "DYNAMIC": {
+            "MIN_DIGIT": "number",
+            "MIN_UPPERCASE": "uppercase letter",
+            "MIN_LOWERCASE": "lowercase letter",
+            "MIN_SPECIAL": "special character",
+            "BE_AT_LEAST_SINGLE": "be at least one character long",
+            "BE_AT_LEAST_MULTIPLE": "be at least {{number}} characters long",
+            "CONTAIN_AT_LEAST": "contain at least",
+            "AND": "and"
+          },
+
+          "ERRORS": {
+            "INVALID_PASSWORD": "Invalid Password",
+            "INCORRECT_PASSWORD": "Incorrect Password",
+            "NO_MATCH_PASSWORD": "Passwords do not match",
+            "NO_CONNECTION": "No connection available"
+          }
+        }
+      },
+
+      "FORGOT": {
+        "TITLE": "RESET PASSWORD",
+        "QUESTION": "FORGOT YOUR PASSWORD?",
+        "MESSAGE": "Enter your username and we'll email you a link to reset your password.",
+        "USERNAME_PLACEHOLDER": "Username",
+        "BUTTON_SUBMIT": "SUBMIT",
+        "PROCESSING": "Processing Username...",
+
+        "SUCCESS": {
+          "MAIN_MESSAGE": "CHECK YOUR EMAIL",
+          "FIRST_PARAGRAPH": "If the username you entered is valid you will receive an email momentarily with a link to reset your password.",
+          "BUTTON_OKAY": "OKAY"
+        },
+
+        "ERRORS": {
+          "SERVER_ERROR": "Server Error.",
+          "NO_CONNECTION": "@:OCF.PASSWORD.CHANGE.LEGEND.ERRORS.NO_CONNECTION"
+        }
+      }
+    },
+
+    "NO_CONNECTIVITY_POPUP": {
+      "HEADER": "Connection Error",
+      "MESSAGE": "Scan again or tap Retry",
+      "CLOSE_BUTTON": "Close",
+      "RETRY_BUTTON": "Retry"
+    },
+
+    "TOASTER": {
+      "INVALID_INPUT": "Invalid Input",
+      "MESSAGE": "Scan ZIPR Tag ID"
+    },
+
+    "AUTO_LOGOUT": {
+      "HEADER": "Login to continue",
+      "MESSAGE_FIRST_ROW": "You have been logged out for",
+      "MESSAGE_SECOND_ROW": "system security reasons.",
+      "BUTTON" : "Okay"
+    },
+
+    "LOADING_SERVICE": {
+      "RETRIEVING": "Retrieving Data",
+      "REOPENING": "Reopening Order",
+      "CLOSING": "Closing Order",
+      "LOADING": "Loading ..."
+    }
+  }
+}

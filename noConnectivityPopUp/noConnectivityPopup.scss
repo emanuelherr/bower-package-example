@@ -1,0 +1,110 @@
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.3) !important;
+}
+
+.as-noConnectivity-popup {
+  min-height: 0;
+  height: 200px;
+  width: 312px;
+  border-radius: 2px;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 5%;
+  margin: 0 auto;
+
+
+  .buttons-row {
+    top: auto;
+  }
+
+  .pane {
+    background-color: $retailer-white;
+    top: t7x(112);
+  }
+
+  .row-header {
+    border-bottom: 0;
+  }
+
+  .row-message {
+    height: 70px;
+    border-bottom: 0;
+  }
+
+  .row + .row {
+    margin-top: 0 !important;
+    padding: 5px !important;
+  }
+
+  .no-connectivity-header {
+    @include roboto;
+    font-weight: bold;
+    color: $retailer-black;
+    font-size: 28px;
+  }
+
+  .no-connectivity-message {
+    @include roboto;
+    color: $retailer-black;
+    font-size: 20px;
+  }
+
+  .no-connectivity-icon {
+    color: $retailer-red;
+    font-size: 28px;
+  }
+
+  .noConnectivity-form {
+    .row {
+      height: t7x(116 + 4 + 10);
+
+      .col {
+        line-height: t7x(88);
+      }
+
+      + .row {
+        padding-top: 5px;
+        margin: 0;
+      }
+    }
+
+    .buttons-row {
+      border: 0;
+      padding: 0 t7x(6) !important;
+      height: 75px;
+
+      .col {
+
+        .button {
+          height: 56px;
+          @include roboto;
+          font-weight: bold;
+          border-radius: 4px !important;
+          font-size: 24px;
+          width: 144px;
+        }
+
+        .button-close {
+          background: $retailer-gray-5; /* For browsers that do not support gradients */
+          background: -webkit-linear-gradient($retailer-gray-5, $retailer-gray-15); /* For Safari 5.1 to 6.0 */
+          background: -o-linear-gradient($retailer-gray-5, $retailer-gray-15); /* For Opera 11.1 to 12.0 */
+          background: -moz-linear-gradient($retailer-gray-5, $retailer-gray-15); /* For Firefox 3.6 to 15 */
+          background: linear-gradient($retailer-gray-5, $retailer-gray-15); /* Standard syntax */
+          border: 1px solid $retailer-gray-15;
+          color: $retailer-black;
+        }
+
+        .button-retry {
+          background: $retailer-green; /* For browsers that do not support gradients */
+          background: -webkit-linear-gradient($retailer-green, $retailer-dark-green); /* For Safari 5.1 to 6.0 */
+          background: -o-linear-gradient($retailer-green, $retailer-dark-green); /* For Opera 11.1 to 12.0 */
+          background: -moz-linear-gradient($retailer-green, $retailer-dark-green); /* For Firefox 3.6 to 15 */
+          background: linear-gradient($retailer-green, $retailer-dark-green); /* Standard syntax */
+          border: 1px solid $retailer-dark-green;
+          color: $retailer-white;
+        }
+      }
+    }
+  }
+}

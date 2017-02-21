@@ -1,0 +1,70 @@
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.3) !important;
+}
+
+.autoLogout-popup {
+  min-height: 0;
+  height: 200px;
+  max-width: 320px;
+  border-radius: 4px;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 5%;
+  margin: 0 auto;
+  background-color: $retailer-gray-5;
+
+  .row-message-header {
+    height: 60px;
+    border-bottom: 1px solid $retailer-gray-30;
+  }
+
+  .row-message-sub-header {
+    height: 75px;
+    margin-top: 7px;
+    border-bottom: 1px solid $retailer-gray-30;
+  }
+
+  /*.row + .row {
+    margin-top: 0 !important;
+    padding: 5px !important;
+  }*/
+
+  .autoLogout-message {
+    @include roboto;
+    font-weight: bold;
+    font-size: 25px;
+    color: black;
+  }
+
+  .autoLogout-sub-message {
+    @include roboto;
+    font-weight: normal;
+    color: $retailer-gray-50;
+    font-size: 20px;
+    color: black;
+  }
+
+  .buttons-row {
+    border: 0;
+    height: 75px;
+    padding-left: 3px !important;
+    padding-top: 0px !important;
+    background-color: $retailer-gray-10;
+    margin-top: 0px;
+
+    .col {
+
+      .button-close {
+        background-color: $retailer-zest-green;
+        width: 305px;
+        color: white;
+        border-radius: 4px !important;
+      }
+
+      .autoLogout-button-span {
+        font-size: 20px;
+      }
+    }
+  }
+}

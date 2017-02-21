@@ -1,0 +1,18 @@
+<ul class="list list-inset list-borderless messages">
+    <li class="item positive" ng-repeat="message in messages.information">
+        {{message}}
+        <span class="color-demo positive-bg positive-border"></span>
+    </li>
+    <li class="item balanced" ng-repeat="message in messages.success">
+        {{message}}
+        <span class="color-demo balanced-bg balanced-border"></span>
+    </li>
+    <li class="item energized" ng-repeat="message in messages.warning">
+        {{message}}
+        <span class="color-demo energized-bg energized-border"></span>
+    </li>
+    <li class="item assertive" ng-repeat="message in messages.error">
+        {{message}}
+        <span class="color-demo assertive-bg assertive-border"></span>
+    </li>
+</ul>

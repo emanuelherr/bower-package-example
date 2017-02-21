@@ -1,0 +1,34 @@
+<ion-view view-title="Login" hide-nav-bar="true" class="login-screen">
+    <ion-content scroll="false">
+
+        <div class="login-box">
+            <div class="hide-on-keyboard-open logo">
+                <img src="assets/img/zest-logo-white.png" alt="Zest Fresh"/>
+            </div>
+
+            <messages class="hide-on-keyboard-open text-align-center"
+                      ng-class="{'messages-hidden':messages.error.length==0}" messages="messages"></messages>
+
+            <form class="form-login" ng-submit="doLogin()">
+                <div>
+                    <label class="item item-input" ng-class="{'error-input': messages.error.length>0}">
+                        <input type="text" placeholder="{{'OCF.LOGIN.USERNAME_PLACEHOLDER' | translate}}" ng-model="loginData.username">
+                    </label>
+                    <label class="item item-input">
+                        <input type="password" placeholder="{{'OCF.LOGIN.PASSWORD_PLACEHOLDER' | translate}}" ng-model="loginData.password">
+                    </label>
+                    <label>
+                        <button class="login-button" type="submit" translate="OCF.LOGIN.LOGIN_BUTTON"></button>
+                    </label>
+                </div>
+            </form>
+        </div>
+
+        <div class="forgot-password" ng-click="forgotPassword()" translate="OCF.LOGIN.FORGOT_PASSWORD"></div>
+
+        <div class="row login-footer" id="login-footer">
+            <label class="col col-50 text-align-left label-footer">© ZEST Fresh 2016</label>
+            <label class="col col-25 text-align-right label-footer">{{appVersion}}</label>
+        </div>
+    </ion-content>
+</ion-view>
