@@ -1,3 +1,4 @@
+(function(window, angular, undefined) {
 // Ionic Starter App
 var translateProvider;
 // angular.module is a global place for creating, registering and retrieving Angular modules
@@ -643,4 +644,4 @@ angular.module('ocf', [
 
       $scope.$on('logout', $scope.userLogout);
     }])
-;
+;})(window, window.angular);
