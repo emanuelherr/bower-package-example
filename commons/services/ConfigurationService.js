@@ -2,9 +2,9 @@ angular
   .module('ocf.services')
   .service('ConfigurationService', ConfigurationService);
 
-ConfigurationService.$inject = ['$rootScope', 'CouchBaseConfig'];
+ConfigurationService.$inject = ['$rootScope', 'CouchBaseConfig', 'URLManager', 'EnvironmentConfig'];
 
-function ConfigurationService($rootScope, CouchBaseConfig) {
+function ConfigurationService($rootScope, CouchBaseConfig, URLManager, EnvironmentConfig) {
 
   var cs = this;
 
@@ -28,6 +28,8 @@ function ConfigurationService($rootScope, CouchBaseConfig) {
       "tagMask": ['330C4DE261100280']
     };
   }
+
+
 
   return cs;
 }

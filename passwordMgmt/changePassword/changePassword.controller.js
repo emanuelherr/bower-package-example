@@ -15,9 +15,9 @@ ChangePasswordController.$inject =
     '$ionicViewSwitcher',
     '$ionicPlatform',
     '$translate',
-    'RecoverDataService',
     'ChangePasswordService',
-    'LoadingService'
+    'LoadingService',
+    '$window'
   ];
 
 function ChangePasswordController($scope,
@@ -28,9 +28,9 @@ function ChangePasswordController($scope,
                                   $ionicViewSwitcher,
                                   $ionicPlatform,
                                   $translate,
-                                  RecoverDataService,
                                   ChangePasswordService,
-                                  LoadingService) {
+                                  LoadingService,
+                                  $window) {
   var deregisterGoToPreviousState;
   var deregisterPasswordStrengthMeter;
 
@@ -95,7 +95,7 @@ function ChangePasswordController($scope,
       newConfirm: false
     }
   };
-
+  $scope.heightScreen = $window.screen.height;
   $scope.changePassword = changePassword;
   $scope.goToPreviousState = goToPreviousState;
   $scope.removeErrors = removeErrors;
@@ -132,6 +132,11 @@ function ChangePasswordController($scope,
       $scope.pm.labels.current = labels['OCF.PASSWORD.CHANGE.CURRENT_PLACEHOLDER'];
       $scope.pm.labels.new = labels['OCF.PASSWORD.CHANGE.NEW_PLACEHOLDER'];
       $scope.pm.labels.newConfirm = labels['OCF.PASSWORD.CHANGE.CONFIRM_PLACEHOLDER'];
+
+      // Required for resetting object model
+      defaultPasswordManagement.labels.current = labels['OCF.PASSWORD.CHANGE.CURRENT_PLACEHOLDER'];
+      defaultPasswordManagement.labels.new = labels['OCF.PASSWORD.CHANGE.NEW_PLACEHOLDER'];
+      defaultPasswordManagement.labels.newConfirm = labels['OCF.PASSWORD.CHANGE.CONFIRM_PLACEHOLDER'];
     });
 
     /**
@@ -200,12 +205,21 @@ function ChangePasswordController($scope,
     });
 
     // pm for PasswordManagement, shortened for readability
+    $scope.pm = angular.copy(defaultPasswordManagement);
     $scope.successPasswordChange = false;
-
+    if ($scope.heightScreen < 480){
+      $("ion-content").css("height", "auto")
+    }
     ChangePasswordService.getPasswordRules()
       .then(function (rules) {
         // Sets rules (removes promises related attributes)
-        $scope.pm.passwordRules = JSON.parse(angular.toJson(rules));
+        $scope.pm.pR = JSON.parse(angular.toJson(rules));
+        $scope.pm.passwordRules = {minDigit: $scope.pm.pR.minDigit,
+          minLength: $scope.pm.pR.minLength,
+          minUppercase: $scope.pm.pR.minUppercase,
+          minLowercase: $scope.pm.pR.minLowercase,
+          minSpecial: $scope.pm.pR.minSpecial
+        };
         // Builds the "MUST" message
         buildRules();
       })
@@ -221,11 +235,6 @@ function ChangePasswordController($scope,
       var strength = zxcvbn(password).score;
       $scope.pm.meter.value = strength ? strength : password.length ? 1 : 0;
     });
-  });
-
-  $scope.$on('$ionicView.afterEnter', function () {
-    RecoverDataService.clean();
-    console.log("RB_Data_Recovery | cleaned dataRecover Obj");
   });
 
   $scope.$on('$ionicView.beforeLeave', function () {
@@ -263,6 +272,12 @@ function ChangePasswordController($scope,
       // Error for the new Confirmation password, there's no action to validate
       $scope.pm.passwords = angular.copy(defaultPasswordManagement.passwords); // Cleans passwords
       $scope.pm.labels.newConfirm = errorNoMatchPass;
+    }
+    if ($scope.heightScreen < 480){
+      $("ion-content").css("height", "auto")
+    }
+    if ($scope.heightScreen < 480){
+      $("ion-content").css("height", "auto")
     }
   }
 
@@ -416,15 +431,40 @@ function ChangePasswordController($scope,
       }).then(function (txt) {
         $scope.$broadcast('minLengthRetrieved', txt);
       });
+      // spanLength += 'be at least ' + $scope.pm.passwordRules.minLength + ' characters, ';
 
     } else {
       $translate('OCF.PASSWORD.CHANGE.LEGEND.DYNAMIC.BE_AT_LEAST_SINGLE')
         .then(function (txt) {
           $scope.$broadcast('minLengthRetrieved', txt);
         });
+      // spanLength += 'be at least one character long, ';
     }
 
+
     $scope.$on('minLengthRetrieved', finishStringBuild);
+
+
+    function getPrepend(rule){
+      var prepend='';
+
+      switch ($translate.use()){
+        case 'es':
+          prepend = 'una ';
+          if (rule === 'minDigit' || rule === 'minSpecial') {
+            prepend = 'un ';
+          }
+          break;
+        default:
+        case 'en':
+          prepend = 'a ';
+          if (rule === 'minUppercase') {
+            prepend = 'an ';
+          }
+          break;
+      }
+      return prepend;
+    }
 
     //noinspection JSUnusedLocalSymbols
     /**
@@ -447,12 +487,7 @@ function ChangePasswordController($scope,
               span += value + ' ' + rulesMessageMapper[rule] + 's';
 
             } else {
-              var prepend = 'a ';
-
-              if (rule === 'minUppercase') {
-                prepend = 'an ';
-              }
-
+              var prepend = getPrepend(rule);
               span += prepend + rulesMessageMapper[rule];
             }
 
@@ -472,5 +507,47 @@ function ChangePasswordController($scope,
       $scope.pm.finalMessage = finalMessage;
       $scope.pm.noErrorsFinalMessage = angular.copy(finalMessage); // useful to recover string status on submit
     }
+
+    // spanLength += '</span><br/>';
+    // message.push(spanLength);
+    //
+    // // Recursively adds valid rules
+    // lodash.forEach($scope.pm.passwordRules, function (value, rule) {
+    //   if (rule != 'minLength') {
+    //     if (value) {
+    //       var span = '<span class="' + rule.split("min")[1].toLocaleLowerCase() + '">';
+    //
+    //       if (value > 1) {
+    //         span += value + ' ' + rulesMessageMapper[rule] + 's';
+    //
+    //       } else {
+    //         var prepend ="";
+    //         if (rule != "minDigit"){
+    //           prepend = 'a ';
+    //
+    //           if (rule === 'minUppercase') {
+    //             prepend = 'an ';
+    //           }
+    //         }
+    //         span += prepend + rulesMessageMapper[rule];
+    //       }
+    //       span += '</span>';
+    //       message.push(span);
+    //     }
+    //   }
+    // });
+    //
+    // message[1] = " " + message[1];
+    // message[message.length - 1] = "and " + message[message.length - 1];
+    //
+    // message[0] = message[0] + message[1]+", ";
+    // message.splice(1,1);
+    // message[1] += ",<br/>";
+    // var finalMessage = message.join(" ");
+    // finalMessage += ".";
+    //
+    // // converts it to string and copies it to the object that will be binded in the template
+    // $scope.pm.finalMessage = finalMessage;
+    // $scope.pm.noErrorsFinalMessage = angular.copy(finalMessage); // useful to recover string status on submit
   }
 }

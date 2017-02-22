@@ -43,7 +43,9 @@
     background: white !important;
     font-size: 14px;
   }
-
+  .text-align-center-pa {
+    margin-top: 0px !important;
+  }
   .error-input {
     border-color: red
   }
@@ -82,6 +84,10 @@
     width: 100%;
   }
 
+  .login-footer-pa {
+    height: 21px;
+    margin-top: 0px !important;
+  }
   .label-footer {
     color: grey;
     font-size: 12px;
@@ -98,5 +104,15 @@
     font-size: 18px;
     font-style: italic;
     color: #BDBEC0;
+  }
+  .forgot-password-pa {
+    padding-top: 0 !important;
+  }
+
+  #usernameLabel{
+    margin: 10px 0 0 !important;
+  }
+  #passwordLabel{
+    margin: 10px 0 0 !important;
   }
 }

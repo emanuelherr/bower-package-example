@@ -24,15 +24,11 @@ function ForgotPasswordController($scope,
   var deregisterGoToPreviousState;
   var defaultPasswordManagement = {
     username: '',
-    label: 'Username',
+    label: '',
     hasError: false,
     genericError: '',
     successPasswordRecover: false
   };
-
-  var errorServerError;
-  var errorNoConnection;
-  var processing;
 
   $scope.goToPreviousState = goToPreviousState;
   $scope.resetPassword = resetPassword;
@@ -41,36 +37,28 @@ function ForgotPasswordController($scope,
   ///////////////
   /// Scope Events
   $scope.$on('$ionicView.beforeEnter', function () {
-    // pm for PasswordManagement, shortened for readability
 
-    /**
-     * Placeholders
-     */
-    $translate('OCF.PASSWORD.FORGOT.USERNAME_PLACEHOLDER')
-      .then(function (usernamePlaceholder) {
-        defaultPasswordManagement.label = usernamePlaceholder;
-        $scope.pm = angular.copy(defaultPasswordManagement);
-      });
-
-    /**
-     * Loading service
-     */
-    $translate('OCF.PASSWORD.FORGOT.PROCESSING').then(function (loading) {
-        processing = loading;
-      });
-
-    /**
-     * Error Messages
-     */
-    $translate([
-      'OCF.PASSWORD.FORGOT.ERRORS.SERVER_ERROR',
-      'OCF.PASSWORD.FORGOT.ERRORS.NO_CONNECTION'
-    ]).then(function (errors) {
-        errorServerError = errors['OCF.PASSWORD.FORGOT.ERRORS.SERVER_ERROR'];
-        errorNoConnection = errors['OCF.PASSWORD.FORGOT.ERRORS.NO_CONNECTION'];
-      });
 
     deregisterGoToPreviousState = $ionicPlatform.registerBackButtonAction(goToPreviousState, 501);
+
+    if ($scope.heightScreen < 480) {
+      document.getElementById("changePasswordInput").addEventListener('touchend', function () {
+        $("#changePasswordInput").attr('readonly', 'readonly'); // Force keyboard to hide on input field.
+        $("#changePasswordInput").attr('disabled', 'true');
+
+        setTimeout(function () {
+          $("#changePasswordInput").blur();  //actually close the keyboard
+          // Remove readonly attribute after keyboard is hidden.
+          $("#changePasswordInput").removeAttr('readonly');
+          $("#changePasswordInput").removeAttr('disabled');
+        }, 100);
+      });
+    }
+    $translate('OCF.PASSWORD.FORGOT.USERNAME_PLACEHOLDER').then(function (placeholder) {
+      defaultPasswordManagement.label = placeholder;
+      // pm for PasswordManagement, shortened for readability
+      $scope.pm = angular.copy(defaultPasswordManagement);
+    });
   });
 
   //noinspection JSUnusedAssignment
@@ -95,8 +83,7 @@ function ForgotPasswordController($scope,
    */
   function resetPassword() {
     if ($scope.pm.username) {
-      LoadingService.show(processing);
-
+      LoadingService.show("Processing username...");
       ForgotPasswordService.recoverPassword($scope.pm.username)
         .then(function () {
           $scope.pm.successPasswordRecover = true;
@@ -125,11 +112,11 @@ function ForgotPasswordController($scope,
     }
 
     if (fail.status == 500) {
-      $scope.pm.genericError = errorServerError;
+      $scope.pm.genericError = "Server Error.";
     }
 
     if (fail.status == 0) {
-      $scope.pm.genericError = errorNoConnection;
+      $scope.pm.genericError = "No connection available.";
     }
   }
 

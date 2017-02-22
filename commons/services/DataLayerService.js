@@ -2,9 +2,9 @@ angular
   .module('ocf.services')
   .service('DataLayerService', DataLayerService);
 
-DataLayerService.$inject = ['$q', 'ConfigurationService', '$window', '$log', 'CouchDbConfig', '$rootScope', 'SessionService', '$interval', '$http', 'LoggingService', '$timeout'];
+DataLayerService.$inject = ['$q', 'ConfigurationService', '$window', '$log', 'CouchDbConfig', '$rootScope', 'SessionService'];
 
-function DataLayerService($q, ConfigurationService, $window, $log, CouchDbConfig, $rootScope, SessionService, $interval, $http, LoggingService, $timeout) {
+function DataLayerService($q, ConfigurationService, $window, $log, CouchDbConfig, $rootScope, SessionService) {
 
   var dls = this;
   var config = ConfigurationService.getLoggedUserConfig();
@@ -12,7 +12,6 @@ function DataLayerService($q, ConfigurationService, $window, $log, CouchDbConfig
 
   dls.db = {};
   dls.dbName = "";
-  dls.changesJob = "";
 
   var service = {
     initialize: initialize,
@@ -28,14 +27,12 @@ function DataLayerService($q, ConfigurationService, $window, $log, CouchDbConfig
     compact: compact,
     purge: purge,
     sync: sync,
-    stopSync: stopSync,
-    checkChanges: checkChanges,
-    stopChanges: stopChanges
+    stopSync: stopSync
   };
 
   return service;
 
-  function initialize(onRecover) {
+  function initialize() {
     var q = $q.defer();
     if (config && config.dbName) {
       dls.dbName = config.dbName + $rootScope.user.id;
@@ -78,7 +75,6 @@ function DataLayerService($q, ConfigurationService, $window, $log, CouchDbConfig
                 return done(err);
               }
               dls.db = db;
-              dls.lastSeq = info.update_seq;
               config.localServerUrl = url;
               config.localDbUrl = url + dls.dbName;
               return done(null, info);
@@ -114,30 +110,13 @@ function DataLayerService($q, ConfigurationService, $window, $log, CouchDbConfig
             return $log.debug("error: " + JSON.stringify(err));
           }
           else {
-
-            LoggingService.logMessage(LoggingService.CONSTANTS.APP.OCF_DATA_LAYER, LoggingService.CONSTANTS.CONTEXT.DATA_LAYER_SERVICE, onRecover?'RB_Data_Recovery':'login', 'Database created correctly', 'success', {});
             $log.debug("Database created correctly" + info);
+            q.resolve();
 
-            compact().then(
-
-              function(success){
-                LoggingService.logMessage(LoggingService.CONSTANTS.APP.OCF_DATA_LAYER, LoggingService.CONSTANTS.CONTEXT.DATA_LAYER_SERVICE, onRecover?'RB_Data_Recovery':'login', 'Database compaction successfully finished', 'success', {});
-                $log.debug("Database compaction successfully finished", success);
-              },
-              function(fail){
-                LoggingService.logMessage(LoggingService.CONSTANTS.APP.OCF_DATA_LAYER, LoggingService.CONSTANTS.CONTEXT.DATA_LAYER_SERVICE, onRecover?'RB_Data_Recovery':'login', 'Database compaction failed:' + fail, 'fail', {});
-                $log.debug("Database compaction failed:", fail);
-              }
-            ).finally(function(){
-
-                checkChanges(onRecover);
-                q.resolve();
-
-                if (config.autoSync) {
-                  $log.debug("Sync enabled");
-                  sync();
-                }
-              })
+            if (config.autoSync) {
+              $log.debug("Sync enabled");
+              sync();
+            }
           }
         });
       }
@@ -166,7 +145,6 @@ function DataLayerService($q, ConfigurationService, $window, $log, CouchDbConfig
     else {
       dls.db.get(['_all_docs', {'include_docs': 'true'}], function (err, docs) {
         if (!err) {
-          LoggingService.logMessage(LoggingService.CONSTANTS.APP.OCF_DATA_LAYER, LoggingService.CONSTANTS.CONTEXT.DATA_LAYER_SERVICE, 'Documents_retrieval', 'Total of Documents retrieved: ' + docs.total_rows, 'success', {});
           $log.debug("All docs retreived");
           q.resolve(docs);
         }
@@ -211,7 +189,6 @@ function DataLayerService($q, ConfigurationService, $window, $log, CouchDbConfig
   }
 
   function updateDocument(doc) {
-    doc.author = $rootScope.user.username;
     var q = $q.defer();
     if (config.usePouchDB) {
       getDocument(doc._id)
@@ -324,7 +301,6 @@ function DataLayerService($q, ConfigurationService, $window, $log, CouchDbConfig
   }
 
   function compact() {
-
     var q = $q.defer();
 
     if (config.usePouchDB) {
@@ -337,24 +313,16 @@ function DataLayerService($q, ConfigurationService, $window, $log, CouchDbConfig
       });
     }
     else {
-      var compactDB = SessionService.getUserData($rootScope.user.id).compact || false;
-
-      if (compactDB) {
-        dls.db.post(['_compact'], function (err, ok) {
-          if (!err) {
-            $log.debug('Compact result: ' + ok);
-            q.resolve(ok);
-          }
-          else {
-            $log.debug('Compact failed: ' + err);
-            q.reject(err);
-          }
-        });
-      }
-      else {
-        $log.debug('Compact disabled');
-        q.reject('Compact disabled');
-      }
+      dls.db.post(['_compact'], function (err, ok) {
+        if (!err) {
+          $log.debug('Compact result: ' + ok);
+          q.resolve(ok);
+        }
+        else {
+          $log.debug('Compact failed: ' + err);
+          q.reject(err);
+        }
+      })
     }
 
     return q.promise;
@@ -396,8 +364,8 @@ function DataLayerService($q, ConfigurationService, $window, $log, CouchDbConfig
           {
             live: true
           }).on('error', function (err) {
-            $log.debug("Error replicating to CouchDB: " + err);
-          });
+          $log.debug("Error replicating to CouchDB: " + err);
+        });
       }
       else {
         //TODO: once the login is in place, verify the replication parameters
@@ -409,9 +377,6 @@ function DataLayerService($q, ConfigurationService, $window, $log, CouchDbConfig
     else {
       triggerSync(function (res) {
         $log.debug("Synced:" + res);
-        if (!res) {
-          addOnlineListener();
-        }
       })
     }
 
@@ -446,7 +411,6 @@ function DataLayerService($q, ConfigurationService, $window, $log, CouchDbConfig
       //push sync catchs
       dls.pushSync.on("error", function (err) {
         $log.debug(err);
-        cb(false);
       });
       dls.pushSync.on("connected", function () {
         dls.pullSync.start();
@@ -455,7 +419,6 @@ function DataLayerService($q, ConfigurationService, $window, $log, CouchDbConfig
       //pull sync catchs
       dls.pullSync.on("error", function (err) {
         $log.debug(err);
-        cb(false);
       });
       dls.pullSync.on("connected", function () {
         cb(true);
@@ -525,6 +488,7 @@ function DataLayerService($q, ConfigurationService, $window, $log, CouchDbConfig
           }
         } else { // non-continuous
           callBack = function (err, info) {
+            //$log.debug("sync callBack", err, info, syncDefinition);
             if (err) {
               if (info.status == 401) {
                 err.status = info.status;
@@ -602,31 +566,6 @@ function DataLayerService($q, ConfigurationService, $window, $log, CouchDbConfig
       };
       return publicAPI;
     }
-
-    function onlineEventHandler () {
-      triggerSync(function (res) {
-        if (res) {
-          removeOnlineListener();
-        } else {
-          $timeout(function(){
-            addOnlineListener();
-          }, 10000);
-        }
-      });
-    }
-
-    function addOnlineListener() {
-      if (navigator.onLine) {
-        onlineEventHandler();
-      } else {
-        $window.addEventListener("online", onlineEventHandler, true);
-      }
-    }
-
-    function removeOnlineListener() {
-      $window.removeEventListener("online", onlineEventHandler, true);
-    }
-
   }
 
   function stopSync() {
@@ -636,33 +575,4 @@ function DataLayerService($q, ConfigurationService, $window, $log, CouchDbConfig
     }
   }
 
-  function checkChanges(onRecover) {
-
-    LoggingService.logMessage(LoggingService.CONSTANTS.APP.OCF_DATA_LAYER, LoggingService.CONSTANTS.CONTEXT.DATA_LAYER_SERVICE, onRecover?'RB_Data_Recovery':'login', 'Starting changes feed...', 'success', {});
-
-    //this should come from the configuration
-    var deltaMilliSeconds = SessionService.getUserData($rootScope.user.id).listRefreshPeriodMilliseconds || 30000;
-    dls.changesJob = $interval(function () {
-      $http({
-        method: 'GET',
-        url: config.localDbUrl + '/_changes',
-        params: {since: dls.lastSeq, feed: "normal"}
-      }).then(function successCallback(change) {
-        dls.lastSeq = change.data.last_seq;
-
-        $log.debug("change", change);
-        if (change.data.results.length) {
-          $rootScope.$broadcast("dbChanged", true);
-        }
-      }, function errorCallback(response) {
-        $log.debug("change", response);
-      });
-    }, deltaMilliSeconds);
-  }
-
-  function stopChanges() {
-    if (dls.changesJob) {
-      $interval.cancel(dls.changesJob);
-    }
-  }
 }

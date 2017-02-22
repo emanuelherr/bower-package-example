@@ -1,4 +1,4 @@
-angular.module('ocf.services', [])
+angular.module('ocf.services', ['toaster'])
   //
   //.factory('DocumentService', function (SessionService, $rootScope) {
   //
@@ -57,35 +57,47 @@ angular.module('ocf.services', [])
   //})
 
 
-  .factory('URLManager', function ($location, EnvironmentConfig, CouchDbConfig, OCFConfig, OrderRetailerConfig) {
+  .factory('URLManager', function ($location, EnvironmentConfig, CouchDbConfig, OCFConfig, StagingConfig, PutAwayConfig) {
     var environmentHost = EnvironmentConfig.host + EnvironmentConfig.apiPath;
     var ocfHost = OCFConfig.host + OCFConfig.apiPath + OCFConfig.servicePath;
-    var couchDbHost = CouchDbConfig.host;
-    var orderRetailerConfigHost = OrderRetailerConfig.host + OrderRetailerConfig.apiPath;
+    //var couchDbHost = CouchDbConfig.host;
+    var stagingConfig = StagingConfig.host + StagingConfig.apiPath;
+    var putAwayConfig = PutAwayConfig.host + PutAwayConfig.apiPath;
 
     var resources = {
       session: environmentHost + 'authentication/session',
-      sessionID: ocfHost + 'application/getSessionId/:userID',
-      couchDbSession: couchDbHost + '_session',
-      initialConfig: ocfHost + "application/load/:appId/:locationId",
+      //sessionID: ocfHost + 'application/getSessionId/:userID',
+      //couchDbSession: couchDbHost + '_session',
+      //initialConfig: ocfHost + "application/load/:appId/:locationId",
       applications: ocfHost + "application/access",
-      couchDbUser: couchDbHost + "_users/org.couchdb.user",
-      tagProcess: environmentHost + 'resources/e20receiving/:tagEpc',
-      tagInfo: environmentHost + 'resources/product_profile/produceProfileIdByEPC/:tagEpc/:locationId',
-      binInfo: environmentHost + 'resources/tag/tagType/:tagEpc/:locationId',
+      //couchDbUser: couchDbHost + "_users/org.couchdb.user",
+      //tagProcess: environmentHost + 'resources/e20receiving/:tagEpc',
+      //tagInfo: environmentHost + 'resources/product_profile/produceProfileIdByEPC/:tagEpc',
+      //binInfo: environmentHost + 'resources/tag/tagType/:tagEpc',
+      ocfConfigurations: ocfHost + 'application/ocf/configurations',
       passwordChange: environmentHost + 'resources/password_change/:organizationId',
       passwordRecover: environmentHost + 'resources/password_recover',
-      receivePallet: orderRetailerConfigHost + 'resources/retailer/pallet/receive',
-      orderRetailerReceivingConfig : orderRetailerConfigHost + 'resources/retailer/config', // J19
-      orderRetailerQCConfig : orderRetailerConfigHost + 'resources/qualityControl/configuration/:locationId', // J18
-      orderRetailerQCOrders : orderRetailerConfigHost + 'resources/qualityControl/order/:locationId', // J18
-      orderRetailerQCOrderDetail : orderRetailerConfigHost + 'resources/qualityControl/order/detail/:orderId/:locationId', // J18
-      orderRetailerQCOrderClose : orderRetailerConfigHost + 'resources/qualityControl/order/close/:orderId', // J18
-      orderRetailerQCOrderReopen : orderRetailerConfigHost + 'resources/qualityControl/order/reopen/:orderId', // J18
-      palletRetailerQCScan : orderRetailerConfigHost + 'resources/qualityControl/pallet/:tagEpc/:locationId', // J18
-      palletRetailerQCEvaluate : orderRetailerConfigHost + 'resources/qualityControl/pallet/evaluate', // J18
+      todayOrders: stagingConfig + 'resource/staging/order/:packhouseId/:appLocationId/:isRefresh',
+      selectOrders: stagingConfig + 'resource/staging/selectedOrders',
+      getSelectedOrders: stagingConfig + 'resource/staging/product/order/:packhouseId/:appLocationId/:isRefresh',
+      closeOrder: stagingConfig + 'resource/staging/order/close/:packhouseId/:appLocationId/:orderId',
+      removePallet: stagingConfig + 'resource/staging/pallet/remove/:packhouseId/:appLocationId/:tagEpc/:reason',
+      assignPallet: stagingConfig + 'resource/staging/pallet/assign/:packhouseId/:appLocationId/:tagEpc/:assignRemovedPallet',
+      unassignPallet: stagingConfig + 'resource/staging/pallet/unassign',
+      overridePallet: stagingConfig + 'resource/staging/pallet/override/:packhouseId/:appLocationId/:tagEpc/:orderId',
+      stagingConfiguration: stagingConfig + 'resource/staging/configuration',
+      pallet: stagingConfig + 'resource/staging/pallet/:packhouseId/:appLocationId/:isRefresh',
+      palletDetail: stagingConfig + 'resource/staging/pallet/detail/:packhouseId/:appLocationId/:tagEpc',
+      assignPOTag: stagingConfig + 'resource/staging/order/assign/tag/:packhouseId/:appLocationId/:orderId/:tagEpc',
+      reopenOrder: stagingConfig + 'resource/staging/order/reopen',
       apiLogMessage : environmentHost + 'resources/app_data_logging',
       grayLogMessage: 'http://192.168.6.38:12201/gelf',
+      putAwayConfigurations: putAwayConfig + 'resource/pap/configurations',
+      palletInfo: putAwayConfig + 'resource/pap/storage/area/assign/pallet/:tagEpc/packhouse/:packhouseId',
+      confirmSA: putAwayConfig + 'resource/pap/storage/area/confirm',
+      unassignSA: putAwayConfig + 'resource/pap/storage/area/unassign/pallet',
+      language: environmentHost+ 'resources/user/preferences/:userId',
+      storageAreaValid: putAwayConfig + 'resource/pap/storage/area/:barCode',
       unknown: environmentHost + 'UNKNOWN_URL'
     };
 
@@ -97,7 +109,7 @@ angular.module('ocf.services', [])
   })
 
 
-  .factory('navigateTo', function ($state, $rootScope) {
+  .factory('navigateTo', function ($state,$rootScope) {
     return {
       login: function () {
         $state.go('ocf.login');
@@ -116,46 +128,33 @@ angular.module('ocf.services', [])
       },
 
       gdc: function () {
-        $state.go('ocf.gdcSelector');
+        $state.go('ocf.retailer.gdcSelector', {}, { reload: true });
+      },
+
+      g10: function () {
+        $state.go('ocf.supplier.staging.todayOrders', {}, { reload: true });
+      },
+
+      g04: function () {
+        $state.go('ocf.supplier.g4.palletDetails', {}, { reload: true });
+      },
+
+      stagingFillOrders: function () {
+        $state.go('ocf.supplier.staging.fillOrders', {}, { reload: true });
+      },
+
+      locationSelector:function () {
+        $state.go('ocf.locationSelector', {}, { reload: true });
       },
 
       retailer: function () {
-        $state.go('ocf.retailer.baseline.listOfSamples');
-      },
-
-      collectAssessments: function (sampleId, edit) {
-        $state.go('ocf.retailer.baseline.collectAssessment', {"sampleId": sampleId, "edit": edit});
-      },
-
-      addSample: function (binId, po, sampleId) {
-        $state.go('ocf.retailer.baseline.addSample', {
-          "binId": binId,
-          "po": po,
-          "sampleId": sampleId
-        });
-      },
-
-      j19: function () {
-        $state.go('ocf.retailer.j19.receiving');
-      },
-
-      j18: {
-        home: function () {
-          $state.go('ocf.retailer.j18.homeScreen');
-        },
-        orderDetails: function (orderId) {
-          $state.go('ocf.retailer.j18.orderDetails', {"orderId": orderId});
-        },
-        resultScreen: function () {
-          $state.go('ocf.retailer.j18.resultScreen');
-        },
-        closeOrder: function (orderId) {
-          $state.go('ocf.retailer.j18.closeOrder', {"orderId": orderId});
-        },
-        orderRejected: function (orderId, reasonIndex) {
-          $state.go('ocf.retailer.j18.orderRejected', {"orderId": orderId, reasonIndex: reasonIndex});
+        if($rootScope.isPilot){
+          $state.go('ocf.retailer.baseline.listOfSamplesPilot');
         }
-      }
+        else{
+          $state.go('ocf.retailer.baseline.listOfSamples');
+        }
+      },
     };
   })
 
@@ -183,18 +182,12 @@ angular.module('ocf.services', [])
   })
 
 
-  .factory('LoadingService', function ($ionicLoading, $translate) {
+  .factory('LoadingService', function ($ionicLoading) {
     var loading = null;
-    var loadingMessage = "";
-
-    $translate('OCF.LOADING_SERVICE.LOADING').then(function (loading) {
-      loadingMessage = loading;
-    });
 
     return {
       // Trigger the loading indicator
       show: function (message) {
-        message = angular.isString(message) ? message : loadingMessage;
 
         // Show the loading overlay and text
         loading = $ionicLoading.show({
@@ -204,9 +197,7 @@ angular.module('ocf.services', [])
           '<div>' + message || 'Loading' + '</div>',
 
           // The animation to use
-          animation: 'fade-in',
-
-          hideOnStateChange: true
+          animation: 'fade-in'
           //,
           //
           //// The delay in showing the indicator
@@ -324,7 +315,7 @@ angular.module('ocf.services', [])
             q.reject(failMessage);
           }
 
-          Session.loginWS({onlyPH: true}, loginSuccess, loginFail);
+          Session.loginWS({appLocations: true}, loginSuccess, loginFail);
 
         });
       return q.promise;
@@ -384,7 +375,7 @@ angular.module('ocf.services', [])
     Session.setHeaderLogin = function (loginData) {
       function setHeaderLogin(loginData) {
         var encoded = encode.encodeCredentials(loginData);
-        $http.defaults.headers.common.ZestAppName = "BaselineRetailer"; //TODO: Define name.
+        $http.defaults.headers.common.ZestAppName = "Shipping";
         $http.defaults.headers.common.Authorization = "Basic " + encoded;
         $http.defaults.headers.common.ZestSessionId = undefined;
 
@@ -405,7 +396,7 @@ angular.module('ocf.services', [])
         var userData = Session.getUserData($rootScope.user.id);
 
         $http.defaults.headers.common.Authorization = undefined;
-        $http.defaults.headers.common.ZestAppName = "BaselineRetailer"; //TODO: Define name.
+        $http.defaults.headers.common.ZestAppName = "Shipping";
         $http.defaults.headers.common.ZestSessionId = userData.sessionId;
 
         return $http.defaults.headers.common.ZestSessionId;
@@ -633,7 +624,7 @@ angular.module('ocf.services', [])
               method: 'GET',
               //headers: {'Authorization': "Basic " + encodedData}
               headers: {
-                'ZestAppName': 'RetailerBaseline',
+                'ZestAppName': 'Shipping',
                 'ZestSessionId': userData.sessionId
               }
             }
@@ -961,6 +952,89 @@ angular.module('ocf.services', [])
     return ReplicationService;
   })
 
+  .factory('StagingConfigurationService', function ($q, EnvironmentConfig, URLManager, $resource, $log) {
+
+    var StagingConfigurationService = this;
+
+    StagingConfigurationService.getStagingConfiguration = function () {
+      var q = $q.defer();
+      var request = $resource(URLManager.getUrl('stagingConfiguration'), {}, {
+        getStagingConfiguration: {
+          method: 'GET',
+          timeout: EnvironmentConfig.requestTimeout
+        }
+      });
+
+      function success(configuration) {
+        $log.debug("Configuration retrieved");
+        q.resolve(configuration);
+      }
+
+      function error(error) {
+        $log.error("Configuration retrieval failed " + error);
+        q.reject(error);
+      }
+
+      request.getStagingConfiguration({}, success, error);
+
+      return q.promise;
+    };
+
+    return StagingConfigurationService;
+  }).factory('UserPreferenceService', function ($q, EnvironmentConfig, URLManager, $resource, $log) {
+
+    var UserPreferenceService = this;
+
+    UserPreferenceService.getUserPreference = function (userId) {
+      var q = $q.defer();
+      var request = $resource(URLManager.getUrl('language'), {}, {
+        getUserPreference: {
+          method: 'GET',
+          timeout: EnvironmentConfig.requestTimeout
+        }
+      });
+
+      function success(configuration) {
+        $log.debug("User Configuration retrieved");
+        q.resolve(configuration);
+      }
+
+      function error(error) {
+        $log.error("User Configuration retrieval failed " + error);
+        q.reject(error);
+      }
+
+      request.getUserPreference({'userId':userId}, success, error);
+
+      return q.promise;
+    };
+
+    UserPreferenceService.setUserPreference = function (userId, preferences) {
+      var q = $q.defer();
+      var request = $resource(URLManager.getUrl('language'), {'userId':userId}, {
+        setUserPreference: {
+          method: 'PUT',
+          timeout: EnvironmentConfig.requestTimeout
+        }
+      });
+
+      function success(configuration) {
+        $log.debug("User Configuration setted");
+        q.resolve(configuration);
+      }
+
+      function error(error) {
+        $log.error("User Configuration setted failed " + error);
+        q.reject(error);
+      }
+
+      request.setUserPreference(preferences, success, error);
+
+      return q.promise;
+    };
+
+    return UserPreferenceService;
+  })
   .factory('LoggingService', function (URLManager, EnvironmentConfig, $q, $log, $resource, $rootScope, $interval) {
 
     var logMessageGrayLog = function (app, context, action, message, result, metadata) {
@@ -974,7 +1048,7 @@ angular.module('ocf.services', [])
         action: action,
         result: result,
         _environment: app,
-        _facility: "retailer_app",
+        _facility: "G10",
         _context: context
       };
 
@@ -1057,13 +1131,12 @@ angular.module('ocf.services', [])
         "key": "context",
         "value": context
       });
-
       var data = {
         "host": EnvironmentConfig.env,
         "action": action,
         "result": result,
         "_environment": app,
-        "_facility": "retailer_app",
+        "_facility": "OCF",
         "full_message": metadata
       };
 
@@ -1074,11 +1147,10 @@ angular.module('ocf.services', [])
       "APP": {
         "OCF_DATA_RECOVER": "OCF_Data_Recover",
         "OCF_LOGIN": "OCF_Login",
-        "OCF_DATA_LAYER": "OCF_Data_Layer",
         "OCF_APP_SELECTOR":"OCF_App_Selector",
         "OCF_LOCATION_SELECTOR":"OCF_Location_Selector",
-        "FRESHNESS_BASELINE":"Freshness_Baseline",
-        "J18": "J18"
+        "G10":"G10",
+        "G04":"G4"
       },
       CONTEXT: {
         "ON_PAUSE":"On_Pause",
@@ -1086,22 +1158,15 @@ angular.module('ocf.services', [])
         "ON_DEVICE_READY":"On_Device_Ready",
         "ON_DATA_RECOVERING":"On_Data_Recovering",
         "LOGIN_CONTROLLER":"Login_Controller",
-        "DATA_LAYER_SERVICE":"Data_Layer_service",
-        "GDC_SELECTOR_CONTROLLER":"Gdc_Selector_Controller",
-        "HOME_CONTROLLER":"Home_Controller",
-        "LIST_OF_SAMPLE_SERVICE":"List_of_sample_service",
-        "ADD_SAMPLE_CONTROLLER":"Add_Sample_Controller",
-        "COLLECT_ASSESSMENT_CONTROLLER":"Collect_Assessment_Controller",
-        "DISPOSAL_POPUP":"Disposal_Popup",
-        "LIST_OF_SAMPLE_CONTROLLER":"List_of_Sample_Controller",
-        "ADD_SAMPLE_POPUP":"Add_sample_Popup",
-        "QC_HOME_SCREEN_CONTROLLER": "QC_Home_Screen_Controller",
-        "QC_CLOSE_ORDER_CONTROLLER": "QC_Close_Order_Controller",
-        "QC_ORDER_DETAILS_CONTROLLER": "QC_Order_Details_Controller",
-        "QC_ORDER_REJECTED_CONTROLLER": "QC_Order_Rejected_Controller",
-        "QC_RESULT_SCREEN_CONTROLLER": "QC_Result_Screen_Controller",
-        "WINDOW_EVENT":"Window_Event",
-        "PICTURE_SERVICE":"Picture_Service"
+        "LOCATION_CONTROLLER":"Location_Controller",
+        "TODAY_ORDER_CONTROLLER" : "Today_Order_Controller",
+        "FILL_ORDER_CONTROLLER" : "Fill_Order_Controller",
+        "ASSIGN_PALLET_POPUP" : "Assign_Pallet_Popup",
+        "REMOVE_PALLET_POPUP" : "Remove_Pallet_Popup",
+        "REOPEN_ORDER_POPUP" : "Reopen_Order_Popup",
+        "SELECT_ORDER_POPUP" : "Select_Order_Popup",
+        "EVENT_HANDLER_SERVICE": "Event_Handler_Service",
+        "PUT_AWAY_CONTROLLER": "Put_Away_Controller"
       }
     };
 
@@ -1144,7 +1209,6 @@ angular.module('ocf.services', [])
       CONSTANTS: CONSTANTS
     };
   })
-
   .factory('LockService', function($log) {
     var _fields = {};
     var _methods = {};
@@ -1194,6 +1258,205 @@ angular.module('ocf.services', [])
       isLocked: _methods.isLocked,
       areLocked: _methods.areLocked
     };
+  })
+
+  .factory('EventHandlerService', function ($timeout, $log, LoggingService) {
+    /**
+     * event = {
+     *      trigger: function() {}, // it should return a promise to be used for the EH
+     *      execState: ""
+     * }
+     */
+
+    var _loggingStates = {
+      app: '',
+      context: ''
+    };
+    var _currentState;
+    var _queue = [];
+
+    _trigger();
+
+    return {
+      setCurrentState: function(currentState) {
+        _setCurrentState(currentState);
+      },
+      enqueue: function(event) {
+        _enqueue(event);
+      },
+      setLoggingState: function (app, context) {
+        _setLoggingState(app, context);
+      }
+    };
+
+    function _enqueue(event) {
+      $log.debug('_enqueue', JSON.stringify(event), JSON.stringify(_queue), JSON.stringify(_loggingStates));
+      if (event.agnostic) event.execState = _currentState;
+      _queue.push(event);
+    }
+
+    function _clearQueue() {
+      $log.debug('_clearQueue');
+      _queue = [];
+    }
+
+    function _setCurrentState(currentState) {
+      $log.debug('_setCurrentState', 'target:', currentState, 'current:', _currentState, JSON.stringify(_loggingStates));
+
+      if (currentState) {
+        _clearQueue();
+        _currentState = currentState;
+      }
+    }
+
+    function _trigger(value) {
+      var event = _queue.shift();
+
+      if (event && (angular.isArray(event.execState) && event.execState.indexOf(_currentState) != -1 || event.execState == _currentState)) {
+        $log.debug('before event.trigger()', JSON.stringify(event), JSON.stringify(_loggingStates));
+
+        event.trigger()
+          .then(_setCurrentState)
+          .catch(_setCurrentState)
+          .finally(_trigger);
+
+      } else {
+        $timeout(_trigger, 64);
+      }
+    }
+
+    function _setLoggingState(app, context) {
+      if (app && context) {
+        _loggingStates.app = LoggingService.CONSTANTS.APP[app];
+        _loggingStates.context = LoggingService.CONSTANTS.CONTEXT[context];
+
+      } else {
+        _loggingStates.app = '';
+        _loggingStates.context = '';
+      }
+    }
+  })
+
+  .factory('TimeoutLockService', function($log, toaster, $translate) {
+      var _fields = {};
+      var _methods = {};
+      var message = "Application busy";
+      $translate('OCF.APPLICATION_BUSY.MESSAGE').then(function (result) {
+        message = result;
+      });
+
+      _fields.serviceName = 'TimeoutLockService';
+      _fields.lastLock = 0;
+
+      _methods.now = function() {
+        return new Date().getTime();
+      };
+
+      _methods.getLockTimeout = function() {
+        /**
+         * Lock timeout in milliseconds
+         * @type {number}
+         */
+        var lockTimeout = 500;
+        //TODO: Get lock timeout from configuration
+
+        $log.info(_fields.serviceName + ' | Lock timeout read from configuration [' + lockTimeout + ']');
+
+        return lockTimeout;
+      };
+
+      _methods.lock = function() {
+        $log.info(_fields.serviceName + ' | Activating locking for ' + _methods.getLockTimeout() + ' milliseconds');
+        _fields.lastLock = _methods.now();
+      };
+
+      _methods.displayAppBusyToaster = function() {
+        $log.debug(_fields.serviceName + ' | Displaying toaster message');
+        $translate('OCF.APPLICATION_BUSY.MESSAGE').then(function (result) {
+          message = result;
+          toaster.pop({
+            type: 'error',
+            body: message,
+            timeout: 5000,
+            showCloseButton: true
+          });
+        });
+      };
+
+      _methods.isLocked = function() {
+        if ((_fields.lastLock + _methods.getLockTimeout()) >= _methods.now()) {
+          // Lock active
+          $log.info(_fields.serviceName + ' | Lock is active');
+          _methods.displayAppBusyToaster();
+          return true;
+        } else {
+          // Lock not active
+          $log.info(_fields.serviceName + ' | Lock is not active');
+          _methods.lock();
+          return false;
+        }
+      };
+
+      return {
+        isLocked: _methods.isLocked
+      };
+    })
+
+  .factory('OCFConfigurationService', function ($resource, $q, $rootScope, $window, $log, URLManager, EnvironmentConfig) {
+    var OCFConfigs = $resource(URLManager.getUrl('ocfConfigurations'), {}, {
+      getConfigs: {
+        method: 'GET',
+        timeout: EnvironmentConfig.requestTimeout
+      }
+    });
+
+    var configs = this;
+
+    configs.retrieveConfigs = _retrieveConfigs;
+    configs.getOcfConfigs = _getOcfConfigs;
+
+    return configs;
+
+    /////////////////////////////
+    function _retrieveConfigs() {
+      return $q(function (resolve, reject) {
+        OCFConfigs.getConfigs({}, _success, _fail);
+
+        function _success(ocfConfigs) {
+          $window.localStorage.setItem("ocfConfigs", JSON.stringify(ocfConfigs));
+          resolve(ocfConfigs);
+        }
+
+        function _fail(error) {
+          $log.error("OCF Configuration Retrieve failed", error);
+          resolve({});
+        }
+      });
+    }
+
+    function _getOcfConfigs() {
+      var ocfConfigs = $window.localStorage.getItem("ocfConfigs");
+
+      return ocfConfigs ? JSON.parse(ocfConfigs) : {};
+    }
+  })
+
+  .factory('StorageService', function ($resource, URLManager,EnvironmentConfig){
+    var storageService = {
+      validStorageArea: validStorageArea
+    };
+    function validStorageArea(barCode){
+      var request = $resource(URLManager.getUrl('storageAreaValid'), {}, {
+        validateStorageArea: {
+          method: 'GET',
+          timeout: EnvironmentConfig.requestTimeout
+        }
+      });
+      var valid = request.validateStorageArea({'barCode':barCode});
+
+      return valid.$promise;
+    };
+    return storageService;
   })
 
   //

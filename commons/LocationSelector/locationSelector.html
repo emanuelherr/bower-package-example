@@ -1,0 +1,30 @@
+<ion-view class="retailer-baseline gdc-selector">
+    <ion-nav-bar class="bar-stable">
+        <ion-nav-title><span class="title" name="gdcSelector-title" translate="OCF.LOCATION_SELECTION.TITLE"></span></ion-nav-title>
+    </ion-nav-bar>
+
+    <ion-content>
+        <div id="gdc-list">
+            <div name="option-value-{{item.locationName}}" class="row item"
+                 ng-repeat="item in locations"
+                 ng-click="selectListLocationItem(item, locations)"
+                 ng-class="{'active': item.selected}">
+                <div class="col col-10">
+                    <i class="fa fa-circle-o unchecked" ng-if="!item.selected"></i>
+                    <i class="fa fa-circle checked" ng-if="item.selected"></i>
+                </div>
+                <div class="col">{{item.locationName}}</div>
+            </div>
+        </div>
+
+    </ion-content>
+    <ion-footer-bar class="footer">
+        <div class="row">
+            <div class="col col-100 continue text-center"
+             name="gdc-continueButton"
+             ng-click="selectLocation()">
+            <span translate="OCF.LOCATION_SELECTION.BUTTON_CONTINUE"></span>
+            </div>
+        </div>
+    </ion-footer-bar>
+</ion-view>

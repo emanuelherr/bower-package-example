@@ -103,6 +103,7 @@
           background: linear-gradient($retailer-green, $retailer-dark-green); /* Standard syntax */
           border: 1px solid $retailer-dark-green;
           color: $retailer-white;
+          padding:0px !important;
         }
       }
     }

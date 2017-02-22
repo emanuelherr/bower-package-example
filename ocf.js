@@ -1,4 +1,3 @@
-(function(window, angular, undefined) {
 // Ionic Starter App
 var translateProvider;
 // angular.module is a global place for creating, registering and retrieving Angular modules
@@ -18,14 +17,14 @@ angular.module('ocf', [
   'ocf.forgotPassword',
   'ocf.changePassword',
   'ocf.controllers',
-  'retailer.controllers',
-  'retailer.menu',
+  'supplier.controllers',
+  'supplier.menu',
   'ngLodash',
   'pouchdb',
-  'toTrustedFilter',
-  'angular.img',
-  'pascalprecht.translate'
-])
+  'pascalprecht.translate',
+  'limitStringFilter',
+  'ngMockE2E'
+  ])
 
 
   .run(function ($rootScope,
@@ -40,43 +39,153 @@ angular.module('ocf', [
                  ScanService,
                  $log,
                  $translate,
+                 DataLayerService,
                  $window,
-                 LoggingService) {
+                 LoggingService,
+                 $httpBackend,
+                 StagingConfig,
+                 URLManager,
+                 EventHandlerService) {
+    EventHandlerService.setCurrentState('ocf.run');
+    var debugging = false;
 
-    $rootScope.translateProvider = translateProvider;
+    if (debugging) {
+      var storageAreas = [
+        {
+          id: 1,
+          barcode: "SA01",
+          name: "SA01",
+          headerColor: "#62a539",
+          bodyColor: "#6db33f"
+        },
+        {
+          id: 2,
+          barcode: "SA02",
+          name: "Storage Area 02",
+          headerColor: "#62a539",
+          bodyColor: "#6db33f"
 
-    $rootScope.$on('$translatePartialLoaderStructureChanged', function () {
-      $translate.refresh();
+        },
+        {
+          id: 3,
+          barcode: "SA03",
+          name: "SA03",
+          headerColor: "#c4161c",
+          bodyColor: "#ed1c24"
+        },
+        {
+          id: 4,
+          barcode: "SA04",
+          name: "Storage Area 04",
+          headerColor: "darkorange",
+          bodyColor: "orange"
+        },
+        {
+          id: 5,
+          barcode: "SA05",
+          name: "Storage Area 05",
+          headerColor: "#2b0a4b",
+          bodyColor: "rebeccapurple"
+        },
+        {
+          id: 6,
+          barcode: "SA06",
+          name: "Storage Area 06",
+          headerColor: "#62a539",
+          bodyColor: "#6db33f"
+        }
+      ];
+
+      var palletInfo = {
+        pallet: {
+          tagEpc: "330C4DE26110028099998001",
+          product: {
+            id: 23,
+            product: "Romaine Lettuce"
+          },
+          ziprCode: "16-330",
+          putAway: true,
+          storageArea: {}
+        },
+        storageAreaValidation: false
+      };
+
+      var restMessages = {
+        G04201: {code: 200, message: "G04-201"},
+        G04202: {code: 200, message: "G04-202"},
+        G04401: {status: 400, data: {defaultErrorMessage: "", errorCode: "G04-401"}},
+        G04402: {status: 400, data: {defaultErrorMessage: "", errorCode: "G04-402"}}
+      };
+
+      $httpBackend.whenGET(/.+storage\/area\/assign\/pallet.+/).respond(function (method, url, data) {
+        var extract_epc_phId = /pallet\/(.+)\/packhouse\/(.+)$/;
+        var epc_phId = extract_epc_phId.exec(url);
+
+        palletInfo.pallet.storageAreaValidation = epc_phId[1].indexOf("1111") != -1;
+        palletInfo.pallet.tagEpc = epc_phId[1];
+        palletInfo.pallet.storageArea = storageAreas[Math.floor(Math.random() * 6)];
+
+        return [200, palletInfo];
+      });
+
+      $httpBackend.whenPOST(URLManager.getUrl('confirmSA')).respond(function (method, url, data) {
+        var obj = JSON.parse(data);
+
+        if (!navigator.onLine) return  [0, {}];
+
+        if (_(storageAreas).find({"barcode": obj.storageArea})) {
+          return [restMessages.G04201.code, restMessages.G04201];
+        } else {
+          return [restMessages.G04402.code, restMessages.G04402.data];
+        }
+      });
+
+      $httpBackend.whenPOST(URLManager.getUrl('unassignSA')).respond(function (method, url, data) {
+        var obj = JSON.parse(data);
+
+        if (obj.tagEpc) {
+          return [200, {code: 200, message: "G04-202"}];
+        } else {
+          return [400, {code: 400, message: "G04-401"}];
+        }
+      });
+    }
+
+    angular.forEach(['GET', 'DELETE', 'JSONP', 'HEAD', 'PUT', 'POST', 'PATCH'], function (method) {
+      $httpBackend.when(method).passThrough();
     });
 
-    // TODO: Remove this line when i18n gets implemented
-    $translate.use('en'); // FORCES 'en' as default language, regarding the browser definition
-
     $ionicPlatform.ready(function () {
-      ionic.Platform.isFullScreen = true;
+      $rootScope.translateProvider = translateProvider;
 
-      // Prevents that Auto-Update gets stuck in a loop when user cancel the
-      // update installation
-      var askedToInstallApk = false;
+      $rootScope.$on('$translatePartialLoaderStructureChanged', function () {
+        $translate.refresh();
+      });
+
+      $translate.use('en'); // FORCES 'en' as default language, regarding the browser definition
+
+      if (window.StatusBar) {
+        StatusBar.hide();
+      }
 
       if (window.cordova) {
+        window.addEventListener('native.keyboardshow', function(){
+          document.body.classList.add('keyboard-open');
+        });
+
+        var removeKeyboardOpen = function(){
+          setTimeout(function () {
+            document.body.classList.remove('keyboard-open');
+          }, 1000);
+        };
+
+        window.addEventListener('native.keyboardhide', removeKeyboardOpen);
+
         $rootScope.$watch(function () {
           return $cordovaKeyboard.isVisible();
         }, function (value) {
           $rootScope.$broadcast("keyboard.open", value);
         });
-
-        window.addEventListener('native.keyboardshow', keyboardShowHandler);
-
-        function keyboardShowHandler(e) {
-          $rootScope.$broadcast("native.keyboardshow", e);
-        }
-
-        window.addEventListener('native.keyboardhide', keyboardHideHandler);
-
-        function keyboardHideHandler(e) {
-          $rootScope.$broadcast("native.keyboardhide", e);
-        }
 
         if (window.cordova.plugins && window.cordova.plugins.autoStart) {
           window.cordova.plugins.autoStart.enable();
@@ -93,12 +202,16 @@ angular.module('ocf', [
           }, "9f3c70eff11ea8481da53c438fd2ec18");
         }
 
+        if (window.cordova.plugins.Keyboard) {
+          $cordovaKeyboard.hideAccessoryBar(true);
+        }
 
         if (window.cordova.getAppVersion) {
           window.cordova.getAppVersion(function (version) {
             if (version == "N/A") {
               version = "Version Unavailable";
             }
+
             $rootScope.appVersion = version;
             $rootScope.$broadcast('appVersion', version);
           });
@@ -113,12 +226,10 @@ angular.module('ocf', [
 
           // Called when background mode has been activated
           cordova.plugins.backgroundMode.onactivate = function () {
-
             $log.debug("Went background");
 
             if ($rootScope.user && $rootScope.user.id) {
-
-              var timeout = SessionService.getUserData($rootScope.user.id).logoutTimeoutMilliseconds;
+              var timeout = $rootScope.stagingConfiguration.userInactivityTimeout;
               timeout = !!timeout ? timeout : 0;
 
               var today = new Date();
@@ -130,17 +241,14 @@ angular.module('ocf', [
 
               var timeout_date = new Date(timeout);
               $log.debug('Background Time: ' + today + ' Log out at: ' + timeout_date);
-              stop = $interval(function () {
 
+              stop = $interval(function () {
                 var today_interval = new Date();
                 var now_interval = today_interval.getTime();
 
                 $log.debug('trying logout at date: ' + today_interval);
                 //check if it should be logged out
                 if (now_interval >= timeout) {
-
-                  window.localStorage.setItem("dataRecover", JSON.stringify({}));
-
                   //stop any ongoing replication if it exists
                   if (!!$rootScope.replicationHandler) {
                     $log.debug("Cancelling replication");
@@ -153,7 +261,6 @@ angular.module('ocf', [
                   $window.localStorage.setItem('sessionExpired', 'true');
                   document.location = "index.html"; // forces memory data cleanup
                   SessionService.clearCredentials();
-
                   //navigateTo.login();
                 }
               }, 10000);
@@ -161,130 +268,86 @@ angular.module('ocf', [
           };
 
           cordova.plugins.backgroundMode.ondeactivate = function () {
-
             $log.debug("Went foreground");
+
+            $rootScope.$broadcast('background', true);
 
             timer = 0;
             $interval.cancel(stop);
             stop = undefined;
 
-            // Check if there are app updates when device background mode is deactivated
-            // This only works on Login screen
-            /*if ($state.is('ocf.login')) {
-              if (!askedToInstallApk) {
-                $rootScope.$broadcast('checkNewVersion');
-              } else {
-                askedToInstallApk = false;
-              }
-            }*/
           };
         }
       }
 
       if (window.StatusBar) {
-        //window.addEventListener('native.keyboardshow', function () {
-        //  //document.body.classList.add('keyboard-open');
-        //});
-
+        StatusBar.styleDefault();
         window.addEventListener('native.keyboardhide', function () {
-          //document.body.classList.remove('keyboard-open');
           window.StatusBar.hide();
         });
-
+        window.addEventListener('native.keyboardshow', function () {
+          window.StatusBar.hide();
+        });
       }
 
       //The default status is online, as it is the login
       $rootScope.isOnline = true;
 
       //Network status indicators
-      document.addEventListener("online", function () {
+      document.addEventListener("online",
+        function(){
         $rootScope.isOnline = true;
-        $log.debug("Went Online");
-        LoggingService.logMessage(LoggingService.CONSTANTS.APP.OCF_LOGIN, LoggingService.CONSTANTS.CONTEXT.WINDOW_EVENT, 'Application_onLine', 'The application changed from Offline to Online', 'success',{});
-      }, false);
+          $log.debug("Went Online");
+        }, false);
 
-      document.addEventListener("offline", function () {
-        $rootScope.isOnline = false;
-        $log.debug("Went Offline");
-      }, false);
-
-
-      $rootScope.$on('removeFiles', function(event) {
-        var getFileConfig = {
-          create: false,
-          exclusive: false
-        };
-
-        var env = EnvironmentConfig.env;
-
-        cordova.file.externalApplicationStorageDirectory = cordova.file.externalApplicationStorageDirectory || "";
-
-        window.resolveLocalFileSystemURL(cordova.file.externalApplicationStorageDirectory, localFileSuccess, localFileFail);
-
-        function localFileSuccess(fileSystem) {
-          fileSystem.getFile('/FRESH-RetailerBaseline-version.txt', getFileConfig, getTxtFileSuccess, getTxtFileFail);
-          fileSystem.getFile('/FRESH-RetailerBaseline-' + env + '.apk', getFileConfig, getTxtFileSuccess, getTxtFileFail);
-
-          function getTxtFileSuccess(fileEntry) {
-            fileEntry.remove(fileRemoveSuccess, fileRemoveFail);
-
-            function fileRemoveSuccess(entry) {
-              console.log("File removed succeeded.");
-            }
-
-            function fileRemoveFail(error) {
-              console.log("Error removing txt file: " + error);
-            }
-          };
-
-          function getTxtFileFail(evt) {
-            console.log("Error getting txt file for removing: " + evt.code);
-          }
-        }
-
-        function localFileFail(evt) {
-          console.log("Error getting txt file: " + evt.code);
-        }
-      });
+      document.addEventListener("offline",
+        function(){
+          $rootScope.isOnline = false;
+          $log.debug("Went Offline");
+        }, false);
 
       $rootScope.onPauseEvent = function(event) {
 
-        var dataRecover = {};
+        if ($rootScope.user) {
+          var dataRecover = {};
 
-        if (window.localStorage.getItem("dataRecover")) {
-          dataRecover = JSON.parse(window.localStorage.getItem("dataRecover"));
-        }
+          if (window.localStorage.getItem("dataRecover")) {
+            dataRecover = JSON.parse(window.localStorage.getItem("dataRecover"));
+          }
 
-        var loginData = {
-          user: $rootScope.user,
-          selectedLocation: $rootScope.selectedLocation,
-          locations: $rootScope.locations,
-          apps: $rootScope.apps,
-          selectedApp: $rootScope.app,
-          userRecoverData: $rootScope.userRecoverData
-        };
+          var loginData = {
+            user: $rootScope.user,
+            configuration: $rootScope.stagingConfiguration,
+            userConfiguration: $rootScope.userConfiguration,
+            selectedLanguage: $rootScope.selectedLanguage,
+            checkDevice: $rootScope.checkDevice,
+            filterAppListByDeviceModel: $rootScope.filterAppListByDeviceModel,
+            selectedLocation: $rootScope.selectedLocation,
+            locations: $rootScope.user.locations,
+            selectedApp: $rootScope.app,
+            userRecoverData: $rootScope.userRecoverData
+          };
 
-        dataRecover.loginData = loginData;
-        dataRecover.hasToRecover = true;
-        dataRecover.createdDateTime = (new Date()).toISOString();
+          dataRecover.loginData = loginData;
+          dataRecover.hasToRecover = true;
+          dataRecover.createdDateTime = (new Date()).toISOString();
 
-        LoggingService.logMessage(LoggingService.CONSTANTS.APP.OCF_DATA_RECOVER, LoggingService.CONSTANTS.CONTEXT.ON_PAUSE, 'onPause callback', 'Saving Data recover', 'success',
-          [{'key': 'dataRecover', 'value': JSON.stringify(dataRecover)}], $rootScope.user != undefined);
+          LoggingService.logMessage(LoggingService.CONSTANTS.APP.OCF_DATA_RECOVER, LoggingService.CONSTANTS.CONTEXT.ON_PAUSE, 'onPause callback', 'Saving Data recover', 'success',
+            [{'key': 'dataRecover', 'value': JSON.stringify(dataRecover)}], $rootScope.user != undefined);
 
-        window.localStorage.setItem("dataRecover", JSON.stringify(dataRecover));
+          window.localStorage.setItem("dataRecover", JSON.stringify(dataRecover));
 
-        if ($rootScope.onPause) {
+          /*if ($rootScope.onPause) {
 
-          LoggingService.logMessage(LoggingService.CONSTANTS.APP.OCF_DATA_RECOVER, LoggingService.CONSTANTS.CONTEXT.ON_PAUSE, 'onPause callback', 'Calling onPause override method', 'success',
-            [], $rootScope.user != undefined);
+           LoggingService.logMessage(LoggingService.CONSTANTS.APP.OCF_DATA_RECOVER, LoggingService.CONSTANTS.CONTEXT.ON_PAUSE, 'onPause callback', 'Calling onPause override method', 'success',
+           [], $rootScope.user != undefined);
 
-          $rootScope.onPause();
+           $rootScope.onPause();
+           }*/
         }
       };
 
       $rootScope.onResumeEvent = function(event) {
-
-        $rootScope.$broadcast('removeFiles');
 
         $rootScope.appResumed = true;
 
@@ -299,12 +362,6 @@ angular.module('ocf', [
             [{'key': 'hasToRecover', 'value': false}], true);
 
           if (window.localStorage.getItem("dataRecover")) {
-            /*dataRecover = JSON.parse(window.localStorage.getItem("dataRecover"));
-
-             dataRecover.hasToRecover = false;
-             dataRecover.loginData = {};
-             dataRecover.createdDateTime = undefined;*/
-
             window.localStorage.setItem("dataRecover", JSON.stringify({}));
           }
         } else {
@@ -312,22 +369,15 @@ angular.module('ocf', [
           LoggingService.logMessage(LoggingService.CONSTANTS.APP.OCF_DATA_RECOVER, LoggingService.CONSTANTS.CONTEXT.ON_RESUME, 'onResume callback',
             'There is data to recover, firing dataRecover event', 'success', [], false);
 
-          // If the Activity was killed as part of a camera request, there will
-          // be a pending result as part of the object
-          if(event.pendingResult) {
-            console.log(JSON.stringify(event.pendingResult));
-            $rootScope.lastPictureTaken = event.pendingResult;
-          }
-
           $rootScope.$broadcast("dataRecover", event);
         }
 
       };
 
-       $rootScope.onDeviceReadyEvent = function() {
+      $rootScope.onDeviceReadyEvent = function() {
         console.log('deviceready');
 
-        $rootScope.$broadcast('removeFiles');
+        window.navigationbar.setUp(true);
 
         LoggingService.logMessage(LoggingService.CONSTANTS.APP.OCF_DATA_RECOVER, LoggingService.CONSTANTS.CONTEXT.ON_DEVICE_READY, 'onDeviceReady callback',
           'checking Data recover', 'success', [], false);
@@ -348,33 +398,71 @@ angular.module('ocf', [
       document.addEventListener("resume", $rootScope.onResumeEvent, false);
 
       document.addEventListener('deviceready', $rootScope.onDeviceReadyEvent, false);
+
+      var isMC = new RegExp(/^MC92N0$/);
+
+      if (window.device && window.device.model.match(isMC)){
+        document.addEventListener('touchcancel', function (cancelEvent) {
+          handleTouch(cancelEvent);
+        });
+
+        document.addEventListener('touchmove', function (moveEvent) {
+          handleTouch(moveEvent);
+        });
+      }
+
+      function handleTouch(event){
+        if ($rootScope.lastMove + 100 < event.timeStamp ){
+
+          var touch = event.changedTouches[0];
+          var Xpos = event.changedTouches[0].screenX;
+          var Ypos = event.changedTouches[0].screenY;
+
+          if ($(touch.target).is("input")){
+            $(touch.target).focus();
+            cordova.plugins.Keyboard.show();
+          }else if($(touch.target).parent().is("input")){
+            $(touch.target).parent().focus();
+            cordova.plugins.Keyboard.show();
+          }else if ($(touch.target).children().is("input")){
+            $(touch.target).children().focus();
+            cordova.plugins.Keyboard.show();
+          }else if($(touch.target).is("button")){
+            $(touch.target).click();
+            cordova.plugins.Keyboard.close();
+          }else if ($(document.elementFromPoint(Xpos , Ypos)).attr('ng-click') != undefined){
+            angular.element(document.elementFromPoint(Xpos , Ypos )).triggerHandler('click');
+            cordova.plugins.Keyboard.close();
+          } else if ($($(document.elementFromPoint(Xpos , Ypos)).parent()).attr('ng-click') != undefined){
+            angular.element($(document.elementFromPoint(Xpos , Ypos )).parent()).triggerHandler('click');
+            cordova.plugins.Keyboard.close();
+          }else if ($($(document.elementFromPoint(Xpos , Ypos)).children()).attr('ng-click') != undefined){
+            angular.element($(document.elementFromPoint(Xpos , Ypos )).children()).triggerHandler('click');
+            cordova.plugins.Keyboard.close();
+          }
+          if (event.type == "touchcancel"){
+            event.preventDefault();
+          }
+        }
+        $rootScope.lastMove = event.timeStamp;
+      }
+
     });
   })
 
-  .config(function ($stateProvider,
-                    $provide,
-                    $urlRouterProvider,
-                    $ionicConfigProvider,
-                    $compileProvider,
-                    $logProvider,
-                    $translateProvider,
-                    $translatePartialLoaderProvider,
-                    $httpProvider) {
-
+  .config(function ($stateProvider, $provide, $urlRouterProvider, $ionicConfigProvider, $compileProvider, $httpProvider, $translatePartialLoaderProvider, $translateProvider) {
     translateProvider = $translateProvider;
 
     $httpProvider.interceptors.push('httpRequestInterceptor');
 
-    $logProvider.debugEnabled(false);
     $compileProvider.debugInfoEnabled(false);
     $ionicConfigProvider.views.maxCache(2);
-    $ionicConfigProvider.views.swipeBackEnabled(false); //this disables the iOS native swipeBack scrolling
-
+    //this disables the iOS native swipeBack scrolling
+    $ionicConfigProvider.views.swipeBackEnabled(false);
+    $ionicConfigProvider.backButton.previousTitleText(false);
     $ionicConfigProvider.tabs.style("standard");
     $ionicConfigProvider.tabs.position("bottom");
-
     $ionicConfigProvider.navBar.alignTitle('center');
-    $ionicConfigProvider.backButton.previousTitleText(false);
 
     // Translation configuration
     $translatePartialLoaderProvider.addPart('ocf/locales');
@@ -388,9 +476,7 @@ angular.module('ocf', [
       })
       .preferredLanguage('en')
       .fallbackLanguage('en')
-      .determinePreferredLanguage()
-      .useSanitizeValueStrategy('escapeParameters');
-
+      .determinePreferredLanguage();
 
     //$q.allSettled implementation
     //allows to wait for multiple promises and don't reject if one fails
@@ -452,11 +538,28 @@ angular.module('ocf', [
       return $q;
     }]);
 
-    // Personalized ionicPagerDirective based on Zest requirements
     $provide.decorator('ionPagerDirective', function ($delegate) {
       var delegate = $delegate[0];
-      delegate.template = '<div class="slider-pager"><ul><li class="slider-pager-page" ng-repeat="slide in numSlides() track by $index" ng-class="{active: $index == currentSlide}" ng-click="pagerClick($index, numSlides().length)" ng-show="belongsToCurrentPage($index)"><div></div></li></ul>' +
-        '<div class="gallery-nav-buttons bottom"> <div class="nav-button left" ng-click="prevGalleryPage()" ng-if="!isFirstPage()"> <i class="icon ion-chevron-left"></i> </div> <div class="nav-button right" ng-click="nextGalleryPage(numSlides().length)" ng-if="!isLastPage(numSlides().length)"> <i class="icon ion-chevron-right"></i> </div> </div>' +
+
+      delegate.template = '' +
+        '<div class="slider-pager">' +
+        ' <ul>' +
+        '   <li class="slider-pager-page"' +
+        '       ng-repeat="slide in numSlides() track by $index"' +
+        '       ng-class="{active: $index == currentSlide}"' +
+        '       ng-click="pagerClick($index, numSlides().length)"' +
+        '       ng-show="belongsToCurrentPage($index)">' +
+        '     <div></div>' +
+        '   </li>' +
+        ' </ul>' +
+        ' <div class="gallery-nav-buttons bottom">' +
+        '   <div class="nav-button left" ng-click="prevGalleryPage()" ng-if="!isFirstPage()">' +
+        '     <i class="icon ion-chevron-left"></i>' +
+        '   </div>' +
+        '   <div class="nav-button right" ng-click="nextGalleryPage(numSlides().length)" ng-if="!isLastPage(numSlides().length)">' +
+        '     <i class="icon ion-chevron-right"></i>' +
+        '   </div>' +
+        ' </div>' +
         '</div>';
       return $delegate;
     });
@@ -464,17 +567,19 @@ angular.module('ocf', [
     // Removed default backdrop in modals
     $provide.decorator('ionModalDirective', function ($delegate) {
       var delegate = $delegate[0];
-      delegate.template = '<div class="modal-backdrop">' +
-        '<div class="modal-wrapper" ng-transclude></div>' +
+      delegate.template = '' +
+        '<div class="modal-backdrop">' +
+        ' <div class="modal-wrapper" ng-transclude></div>' +
         '</div>';
       return $delegate;
     });
 
     $stateProvider
+    // Login screen
       .state('ocf', {
         url: "",
         abstract: true,
-        template: '<ion-view view-title="OCF"><ion-nav-view name="ocf"></ion-nav-view></ion-view>',
+        template: '<ion-view view-title="OCF"><ion-nav-view name="ocf"></ion-nav-view></ion-view> ',
         controller: 'AppCtrl'
       });
 
@@ -483,165 +588,190 @@ angular.module('ocf', [
     $urlRouterProvider.otherwise('/login');
   })
 
-  .controller('AppCtrl', [
-    '$rootScope',
-    '$scope',
-    '$state',
-    '$timeout',
-    '$log',
-    'SessionService',
-    'SessionConfig',
-    'navigateTo',
-    'MessageService',
-    'DataLayerService',
-    'LoadingService',
-    '$window',
-    'LoggingService', function ($rootScope,
-                         $scope,
-                         $state,
-                         $timeout,
-                         $log,
-                         SessionService,
-                         SessionConfig,
-                         navigateTo,
-                         MessageService,
-                         DataLayerService,
-                         LoadingService,
-                         $window,
-                         LoggingService) {
-      MessageService.clear();
-      $rootScope.wasAtNewSample = false;
-      $rootScope.stateTransition = {failOnTransition: false};
-      $scope.scannerAllowed = window.cordova;
-      $scope.appVersion = "v";
-      $scope.previousStateName = '';
-      $scope.messages = MessageService.getCurrentMessages();
+  .controller('AppCtrl', function ($rootScope,
+                                   $ionicHistory,
+                                   $scope,
+                                   encode,
+                                   $state,
+                                   $ionicModal,
+                                   $ionicPopup,
+                                   $ionicLoading,
+                                   $ionicSlideBoxDelegate,
+                                   $timeout,
+                                   $log,
+                                   SessionService,
+                                   SessionConfig,
+                                   ReplicationService,
+                                   navigateTo,
+                                   $q,
+                                   MessageService,
+                                   CouchDbConfig,
+                                   lodash,
+                                   InitializationService,
+                                   LoadingService,
+                                   $cordovaDialogs,
+                                   $cordovaBarcodeScanner,
+                                   $ionicViewSwitcher,
+                                   $ionicBackdrop,
+                                   DataLayerService,
+                                   $window,
+                                   NoConnectivityPopupService,
+                                   LanguageSelectorService) {
 
-      $scope.changePassword = navigateTo.changePassword;
-      $scope.userLogout = userLogout;
-      $scope.exit = exit;
+    MessageService.clear();
+    $scope.messages = MessageService.getCurrentMessages();
+    $scope.scannerAllowed = window.cordova;
+    $rootScope.wasAtNewSample = false;
+    $scope.appVersion = "v";
+    $rootScope.selectedLanguage = "English";
+    $scope.changePassword = changePassword;
+    $scope.deviceModel = false;
+    $scope.checkDevice = false;
 
-      $rootScope.$on('appVersion', function (event, appVersion) {
-        $scope.appVersion += appVersion;
-      });
+    if ($window.device && $window.device.model) {
+      $scope.deviceModel = String($window.device.model);
+    }
 
-      $rootScope.$on('$stateChangeStart', stateChangeStart);
-      $rootScope.$on('$stateChangeError', stateChangeError);
-      $rootScope.$on('$stateChangeSuccess', LoadingService.hide);
-      $rootScope.$on('$stateNotFound', LoadingService.hide);
+    $rootScope.$on('appVersion', function (event, appVersion) {
+      $scope.appVersion += appVersion;
+    });
 
-      $rootScope.$on('logout', userLogout);
+    $scope.isNewSample = function (path) {
+      var regexp = /newLotSample/;
+      return regexp.test(path);
+    };
 
-      ///////////////////////////
-      /**
-       * Cleans session data and redirects the user to the login screen
-       * @param deferred
-       * @param fromInterceptor
-       */
-      function userLogout(deferred, fromInterceptor) {
-        //force a logout
-
-        LoggingService.logMessage(LoggingService.CONSTANTS.APP.OCF_LOGIN, LoggingService.CONSTANTS.CONTEXT.LOGIN_CONTROLLER, 'userLogout event',
-          'Logging out user', 'success', [{'key':'user', 'value':JSON.stringify($rootScope.user)}], false);
-
-        if(fromInterceptor) {
-          $window.localStorage.setItem('sessionExpired', 'true');
-        }
-
-        //navigateTo.login();
-        SessionService.destroy();
-        SessionService.clearCredentials();
-        DataLayerService.stopSync();
-        DataLayerService.stopChanges();
-        $rootScope.user = null;
-        $rootScope.app = null;
-        $rootScope.selectedLocation = null;
-        $log.debug("User logged out successfully");
-        document.location = "index.html"; // forces memory data cleanup
+    $scope.saveState = function () {
+      if (!$scope.isNewSample($state.current.name)) {
+        $scope.savedState = angular.copy($state.current.name);
       }
 
-      /**
-       * Logs out the user and exits the application
-       */
-      function exit() {
+      $scope.savedStateParams = angular.copy($state.params);
+    };
+
+    $rootScope.$on('$stateChangeStart', function (event, toState, toParams, fromState, fromParams) {
+      $log.debug('AppCtrl - $stateChangeStart to ' + toState.to + '- fired when the transition begins. toState,toParams : \n', toState, toParams);
+      $scope.previousStateName = fromState.name;
+
+      var session = SessionService.getSessionData();
+
+      $scope.parseDate = function (date) {
+        var dateFormat = "MM/DD/YY";
+        if (!!$rootScope.selectedLocation.timezoneOffset) {
+          return moment(date).utcOffset($rootScope.selectedLocation.timezoneOffset / 60000).format(dateFormat);
+        }
+        return moment(date).format(dateFormat); // without offset
+      };
+
+      $scope.calculateTimeOffset = function (date) {
+        if (!!$rootScope.selectedLocation.timezoneOffset) {
+          return moment.utc(date).utcOffset($rootScope.selectedLocation.timezoneOffset / 60000)
+        } else {
+          return moment.utc(date); // without offset
+        }
+      };
+
+      $rootScope.getCurrentDate = function () {
+        return $scope.parseDate(new Date().getTime());
+      };
+
+      $scope.saveState();
+
+      setTimeout(function () {
+        $('ion-nav-bar').removeClass('hide');
+        $('ion-nav-back-button').removeClass('hide');
+        $('button').removeClass('hide');
+
+      }, 10);
+
+      if (session !== null) {
+        var sessionOver = (Date.now() - session.createdDate) / (1000 * 3600) > SessionConfig.cookieLifeTime;
+      }
+
+      if (!!session && session.status == "loggedOffline" && sessionOver) {
+        $log.debug("Session lifetime reached. Logging out");
+        //try to replicate
         $scope.userLogout();
-        navigator.app.exitApp();
+        navigateTo.login();
+        event.preventDefault();
+      }
+    });
+
+    $scope.userLogout = function (deferred, fromInterceptor) {
+      //force a logout
+      if(fromInterceptor) {
+        $window.localStorage.setItem('sessionExpired', 'true');
       }
 
-      /**
-       * Takes decisions based on current status
-       * @param event
-       * @param toState
-       * @param toParams
-       * @param fromState
-       * @param fromParams
-       */
-      function stateChangeStart(event, toState, toParams, fromState, fromParams) {
-        var session = SessionService.getSessionData();
-        var isNewLotSample = /newLotSample/;
-        var stateCurrentName = $state.current.name;
+      //navigateTo.login();
+      SessionService.destroy();
+      SessionService.clearCredentials();
+      //DataLayerService.stopSync();
+      $rootScope.user = null;
+      $rootScope.app = null;
+      $rootScope.selectedLocation = null;
+      $log.debug("User logged out successfully");
+      document.location = "index.html"; // forces memory data cleanup
+    };
 
-        $scope.savedStateParams = angular.copy($state.params);
-        $scope.previousStateName = fromState.name;
-        $scope.previousStateParams = fromParams;
+    $rootScope.languagePopup = LanguageSelectorService;
+    $rootScope.languagePopup.create('', {scope: $rootScope})
+      .then(function (success) {
+        $log.debug(success);
 
-        if (!isNewLotSample.test(stateCurrentName)) {
-          $scope.savedState = angular.copy(stateCurrentName);
-        }
+      })
+      .catch(function (fail) {
+        $log.error(fail);
+      });
 
-        $timeout(function () {
-          $('ion-nav-bar').removeClass('hide');
-          $('ion-nav-back-button').removeClass('hide');
-          $('button').removeClass('hide');
-        }, 10);
-
-        if (session !== null) {
-          var sessionOver = (Date.now() - session.createdDate) / (1000 * 3600) > SessionConfig.cookieLifeTime;
-        }
-
-        if (!!session && session.status == "loggedOffline" && sessionOver) {
-          $log.debug("Session lifetime reached. Logging out");
-          //try to replicate
-          $scope.userLogout();
-          navigateTo.login();
-          event.preventDefault();
-        }
+    document.addEventListener('backbutton', function(){
+      if($rootScope.languagePopup && $rootScope.languagePopup.isShown){
+        $rootScope.languagePopup.close();
       }
+    });
 
-      //noinspection JSUnusedLocalSymbols
-      /**
-       * Handles State Change error event
-       * @param event
-       * @param toState
-       * @param toParams
-       * @param fromState
-       * @param fromParams
-       * @param error
-       */
-      function stateChangeError(event, toState, toParams, fromState, fromParams, error) {
-        $rootScope.stateTransition.failOnTransition = true;
-        $rootScope.stateTransition.params = toParams;
-        $rootScope.stateTransition.state = toState;
-        $scope.$broadcast('stateTransitionFailed', error);
-        LoadingService.hide();
-      }
+    $scope.selectLanguage = function () {
+      $scope.languagePopup.open();
+    };
 
-      ///////////////////////
-      /**
-       * Events listeners for debugging purpose
-       */
-      $rootScope.$on('$viewContentLoading', function (event, viewConfig) {
-        // runs on individual scopes, so putting it in "run" doesn't work.
-        $log.debug('$viewContentLoading - view begins loading - dom not rendered', viewConfig);
-      });
-      $rootScope.$on('$viewContentLoaded', function (event) {
-        $log.debug('$viewContentLoaded - fired after dom rendered', event);
-      });
-      $rootScope.$on('$stateNotFound', function (event, unfoundState, fromState, fromParams) {
-        $log.debug('$stateNotFound ' + unfoundState.to + '  - fired when a state cannot be found by its name.');
-        $log.debug(unfoundState, fromState, fromParams);
-      });
+    function changePassword() {
+      navigateTo.changePassword();
+    }
 
-      $scope.$on('logout', $scope.userLogout);
-    }])
-;})(window, window.angular);
+    $scope.previousStateName = '';
+
+    /**
+     * Methods for debugging purpose
+     */
+    $rootScope.$on('$stateChangeError', function (event, toState, toParams, fromState, fromParams, error) {
+      $log.debug('$stateChangeError - fired when an error occurs during transition.');
+      $log.debug(arguments);
+    });
+    $rootScope.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {
+      $log.debug('$stateChangeSuccess to ' + toState.name + '- fired once the state transition is complete.');
+    });
+    $rootScope.$on('$viewContentLoading', function (event, viewConfig) {
+      // runs on individual scopes, so putting it in "run" doesn't work.
+      $log.debug('$viewContentLoading - view begins loading - dom not rendered', viewConfig);
+    });
+    $rootScope.$on('$viewContentLoaded', function (event) {
+      $log.debug('$viewContentLoaded - fired after dom rendered', event);
+    });
+    $rootScope.$on('$stateNotFound', function (event, unfoundState, fromState, fromParams) {
+      $log.debug('$stateNotFound ' + unfoundState.to + '  - fired when a state cannot be found by its name.');
+      $log.debug(unfoundState, fromState, fromParams);
+    });
+
+    $scope.$on('logout', $scope.userLogout);
+
+    $rootScope.noConnectivityPopup = NoConnectivityPopupService;
+
+    $rootScope.noConnectivityPopup.create('', {scope: $rootScope})
+      .then(function (success) {
+        $log.debug(success);
+      })
+      .catch(function(error){
+        $log.error(error);
+      });
+  })
+;

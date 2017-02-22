@@ -2,12 +2,28 @@
   * Created by FMG on 11/03/2016.
   */
 angular
-  .module('retailer.services')
+  .module('supplier.services')
   .service('NoConnectivityPopupService', NoConnectivityPopupService);
 
-NoConnectivityPopupService.$inject = ['$q', '$ionicModal', 'lodash', '$log', '$rootScope', '$ionicBackdrop'];
+NoConnectivityPopupService.$inject = [
+  '$q',
+  '$ionicModal',
+  'lodash',
+  '$log',
+  '$rootScope',
+  '$timeout',
+  '$ionicBackdrop',
+  '$translate'
+];
 
-function NoConnectivityPopupService($q, $ionicModal, lodash, $log, $rootScope, $ionicBackdrop) {
+function NoConnectivityPopupService($q,
+                                    $ionicModal,
+                                    lodash,
+                                    $log,
+                                    $rootScope,
+                                    $timeout,
+                                    $ionicBackdrop,
+                                    $translate) {
   var asps = this;
 
   asps.close = close;
@@ -34,8 +50,11 @@ function NoConnectivityPopupService($q, $ionicModal, lodash, $log, $rootScope, $
    * Closes the popup
    */
   function close() {
-    asps.noConnectivity.remove();
-    $ionicBackdrop.release();
+    asps.noConnectivity.hide();
+    $timeout(function() {
+      $ionicBackdrop.release();
+      $('body').removeClass('modal-open');
+    }, 1000);
     $rootScope.$broadcast('noConnectivityClose', true);
     $log.debug("No Connectivity Close button clicked");
   }
@@ -45,8 +64,11 @@ function NoConnectivityPopupService($q, $ionicModal, lodash, $log, $rootScope, $
    * Confirm button clicked
    */
   function retry() {
-    asps.noConnectivity.remove();
-    $ionicBackdrop.release();
+    asps.noConnectivity.hide();
+    $timeout(function() {
+      $ionicBackdrop.release();
+      $('body').removeClass('modal-open');
+    }, 1000);
     $rootScope.$broadcast('noConnectivityRetry', true);
     $log.debug("No Connectivity retry button clicked");
   }
@@ -84,6 +106,9 @@ function NoConnectivityPopupService($q, $ionicModal, lodash, $log, $rootScope, $
    * Removes popup from DOM
    */
   function destroy() {
+    $timeout(function() {
+      $ionicBackdrop.release();
+    }, 1000);
     asps.noConnectivity.remove();
     $log.debug("No Connectivity removed from DOM");
   }
@@ -93,12 +118,14 @@ function NoConnectivityPopupService($q, $ionicModal, lodash, $log, $rootScope, $
    * Called when open is needed
    */
   function open() {
-    asps.noConnectivity.show();
-    $ionicBackdrop.retain();
+    $timeout(function() {
+      asps.noConnectivity.show();
+      $ionicBackdrop.retain();
+    }, 1000);
     $log.debug("No Connectivitye Open button clicked");
   }
 
   function isShown() {
-    return asps.noConnectivity.isShown();
+    return  asps.noConnectivity.isShown();
   }
 }

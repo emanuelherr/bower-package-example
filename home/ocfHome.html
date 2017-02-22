@@ -1,27 +1,27 @@
-<ion-view id="title" class="app-selector">
+<ion-view id="title" view-title="App Selection" class="app-selector">
+
     <ion-nav-bar class="bar-stable">
         <ion-nav-title><span class="title" name="appSelector-title" translate="OCF.APP_SELECTION.TITLE"></span></ion-nav-title>
-        <ion-header-bar>
-            <!--<ion-nav-buttons side="left" ng-class="{'backbutton-hide': !showBackButton}">
-                <button class="button button-icon button-clear button-dark" ng-class="{'backbutton-hide': !showBackButton}"
+        <ion-header-bar class="bar-stable main-nav-bar" >
+            <!--<ion-nav-buttons side="left">
+                <button class="button button-icon button-clear button-dark" ng-class="{'hide-back-button': hideBackButton}"
                         ng-click="goToPreviousState()"
                         name="gdcSelector-backButton"><i class="fa fa-angle-left"></i></button>
             </ion-nav-buttons>-->
-
         </ion-header-bar>
     </ion-nav-bar>
 
     <ion-content>
         <div id="app-list">
-            <div name="option-value-{{app.appName}}" class="row item"
-                 ng-repeat="app in apps"
-                 ng-click="selectListAppItem(app.appCacheName, apps)"
-                 ng-class="{'active': app.selected}">
+            <div name="option-value-{{subApp.appName}}" class="row item"
+                 ng-repeat="subApp in subApps"
+                 ng-click="selectListAppItem(subApp, subApps)"
+                 ng-class="{'active': subApp.selected}">
                 <div class="col col-10">
-                    <i class="fa fa-circle-o unchecked" ng-if="!app.selected"></i>
-                    <i class="fa fa-circle checked" ng-if="app.selected"></i>
+                    <i class="fa fa-circle-o unchecked" ng-if="!subApp.selected"></i>
+                    <i class="fa fa-circle checked" ng-if="subApp.selected"></i>
                 </div>
-                <div class="col">{{app.appName}}</div>
+                <div class="col">{{subApp.appName}}</div>
             </div>
         </div>
     </ion-content>

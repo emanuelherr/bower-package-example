@@ -1,15 +1,15 @@
 {
   "OCF": {
     "LOGIN": {
-      "USERNAME_PLACEHOLDER": "Usuario",
-      "PASSWORD_PLACEHOLDER": "Contraseña",
-      "LOGIN_BUTTON": "ACCEDER",
-      "FORGOT_PASSWORD": "¿Olvidó su contraseña?",
+      "USERNAME_PLACEHOLDER": "Username",
+      "PASSWORD_PLACEHOLDER": "Password",
+      "LOGIN_BUTTON": "Login",
+      "FORGOT_PASSWORD": "Forgot your password?",
 
       "NOTIFICATIONS": {
-        "VERIFYING_CREDENTIALS": "Validando credenciales",
-        "REMOTE_STORAGE_VERIFICATION": "Validación de almacenamiento remoto",
-        "SETTING_UP": "Preparando entorno..."
+        "VERIFYING_CREDENTIALS": "Verifying credentials",
+        "REMOTE_STORAGE_VERIFICATION": "Remote storage verification",
+        "SETTING_UP": "Setting up..."
       }
     },
 
@@ -68,8 +68,8 @@
             "MIN_UPPERCASE": "letra mayúscula",
             "MIN_LOWERCASE": "letra minúscula",
             "MIN_SPECIAL": "caracter especial",
-            "BE_AT_LEAST_SINGLE": "ser al lo menos de un caracter de largo",
-            "BE_AT_LEAST_MULTIPLE": "ser al menos {{number}} caracteres de largo",
+            "BE_AT_LEAST_SINGLE": "tener al lo menos de un caracter de largo",
+            "BE_AT_LEAST_MULTIPLE": "tener al menos {{number}} caracteres de largo",
             "CONTAIN_AT_LEAST": "contener al menos",
             "AND": "y"
           },
@@ -105,8 +105,8 @@
     },
 
     "NO_CONNECTIVITY_POPUP": {
-      "HEADER": "Error en la Conexión",
-      "MESSAGE": "Scanee otra vez o presione Reintentar",
+      "HEADER": "Error de Conexión",
+      "MESSAGE": "Reintentar de nuevo",
       "CLOSE_BUTTON": "Cerrar",
       "RETRY_BUTTON": "Reintentar"
     },
@@ -128,6 +128,29 @@
       "REOPENING": "Reabriendo Orden",
       "CLOSING": "Cerrando Orden",
       "LOADING": "Cargando ..."
+    },
+    "LANGUAGE_SELECTOR":{
+      "SELECT_LANGUAGE": "Selecciona Idioma",
+      "LANGUAGES":{
+        "SPANISH":"Español",
+        "ENGLISH":"Ingles"
+      }
+    },
+    "SIDE_MENU":{
+      "USER":"Logueado como:",
+      "LOGOUT": "Desloguear",
+      "CHANGE_PASSWORD":"Cambiar Contraseña",
+      "LANGUAGE": "Idioma",
+      "LANGUAGES":{
+        "SPANISH":"Español",
+        "ENGLISH":"Ingles"
+      }
+    },
+    "MESSAGES":{
+      "LOADING":"Cargando..."
+    },
+    "APPLICATION_BUSY":{
+      "MESSAGE" : "Aplicacion ocupada"
     }
   }
 }

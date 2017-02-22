@@ -22,7 +22,6 @@ angular.module('ocf.login', [
     '$rootScope',
     'SessionService',
     'navigateTo',
-    'DocumentService',
     'ReplicationService',
     'LoadingService',
     'MessageService',
@@ -32,59 +31,59 @@ angular.module('ocf.login', [
     '$resource',
     '$q',
     '$http',
-    '$translate',
     'DataLayerService',
+    'StagingConfigurationService',
     '$ionicPlatform',
     'AutoLogoutPopupService',
     '$log',
     '$window',
+    'lodash',
     'LoggingService',
-    function LoginController($scope,
-                             $timeout,
-                             $rootScope,
-                             SessionService,
-                             navigateTo,
-                             DocumentService,
-                             ReplicationService,
-                             LoadingService,
-                             MessageService,
-                             CouchDbConfig,
-                             encode,
-                             URLManager,
-                             $resource,
-                             $q,
-                             $http,
-                             $translate,
-                             DataLayerService,
-                             $ionicPlatform,
-                             AutoLogoutPopupService,
-                             $log,
-                             $window,
-                             LoggingService) {
-      var deregisterGoToPreviousState = $ionicPlatform.registerBackButtonAction(goToPreviousState, 501);
-      var verifyingCredentials;
-      var remoteStorageVerification;
-      var settingUp;
+    'OCFConfigurationService',
+    'UserPreferenceService',
+    '$translate',
+    function ($scope,
+              $timeout,
+              $rootScope,
+              SessionService,
+              navigateTo,
+              ReplicationService,
+              LoadingService,
+              MessageService,
+              CouchDbConfig,
+              encode,
+              URLManager,
+              $resource,
+              $q,
+              $http,
+              DataLayerService,
+              StagingConfigurationService,
+              $ionicPlatform,
+              AutoLogoutPopupService,
+              $log,
+              $window,
+              _,
+              LoggingService,
+              OCFConfigurationService,
+              UserPreferenceService,
+              $translate) {
 
-      $scope.loginData = {};
-      $scope.appVersion = "v";
-      $scope.forgotPassword = forgotPassword;
+      $scope.goToPreviousState = goToPreviousState;
+      var backupUsername = "Username";
+      var backupPassword = "Password";
 
-      $scope.$on("$ionicView.beforeEnter", function () {
-        $translate('OCF.LOGIN.NOTIFICATIONS.VERIFYING_CREDENTIALS').then(function (vc) {
-          verifyingCredentials = vc;
-        });
+      $scope.form = {
+        username: backupUsername,
+        password: backupPassword
 
-        $translate('OCF.LOGIN.NOTIFICATIONS.REMOTE_STORAGE_VERIFICATION').then(function (rsv) {
-          remoteStorageVerification = rsv;
-        });
+      };
 
-        $translate('OCF.LOGIN.NOTIFICATIONS.SETTING_UP').then(function (su) {
-          settingUp = su;
-        });
+      var deregisterGoToPreviousState;
+      $scope.heightScreen = $window.screen.height;
 
-        if($window.localStorage.getItem('sessionExpired') === 'true') {
-
+      $scope.$on('$ionicView.beforeEnter', function () {
+        deregisterGoToPreviousState = $ionicPlatform.registerBackButtonAction(goToPreviousState, 501);
+        if ($window.localStorage.getItem('sessionExpired') === 'true') {
           $scope.autoLogoutPopup = AutoLogoutPopupService;
 
           $scope.autoLogoutPopup.create('', {scope: $scope})
@@ -97,258 +96,349 @@ angular.module('ocf.login', [
               $log.error(fail);
             });
         }
+
+        $translate([
+          'OCF.LOGIN.USERNAME_PLACEHOLDER',
+          'OCF.LOGIN.PASSWORD_PLACEHOLDER'
+        ]).then(function (placeholders) {
+          $scope.form.username = placeholders['OCF.LOGIN.USERNAME_PLACEHOLDER'];
+          $scope.form.backupUsername = placeholders['OCF.LOGIN.USERNAME_PLACEHOLDER'];
+          $scope.form.password = placeholders['OCF.LOGIN.PASSWORD_PLACEHOLDER'];
+          $scope.form.backupPassword = placeholders['OCF.LOGIN.PASSWORD_PLACEHOLDER'];
+        });
       });
+
+      $scope.$on('$ionicView.beforeLeave', function () {
+        $log.debug('$ionicView.beforeLeave');
+        $ionicPlatform.offHardwareBackButton(goToPreviousState);
+      });
+
+      $scope.$on('$ionicView.afterEnter', function () {
+        if ($scope.heightScreen < 480) {
+          var usernameInputBlock = document.getElementById("usernameInput").getBoundingClientRect(); // top, right, bottom, left, width
+          var passwordInputBlock = document.getElementById("passwordInput").getBoundingClientRect();
+          var arrayInputs = ["usernameInput", "passwordInput"];
+
+          for (var i = 0; i < arrayInputs.length; i++) {
+            document.getElementById(arrayInputs[i]).addEventListener('touchend', function (element) {
+              var $element = $(element.target);
+              $timeout(function () {
+                if ($element.attr('id') == "usernameInput") delete $scope.form.username;
+                else delete $scope.form.password;
+              }, 100);
+            });
+          }
+
+          document.addEventListener('touchend', _onTouchEnd);
+
+          function _onTouchEnd(event) {
+            var touches = event.changedTouches[0]; // clientX, clientY
+
+            // username
+            if (_touchesInput(usernameInputBlock, touches)) {
+              delete $scope.form.username;
+            } else {
+              $scope.form.username = backupUsername;
+            }
+
+            // password
+            if (_touchesInput(passwordInputBlock, touches)) {
+              delete $scope.form.password;
+            } else {
+              $scope.form.password = backupPassword;
+            }
+          }
+
+          function _touchesInput(inputBoundaries, touches) {
+            return inputBoundaries.left <= touches.clientX && inputBoundaries.right >= touches.clientX
+              && inputBoundaries.top <= touches.clientY && inputBoundaries.bottom >= touches.clientY;
+          }
+        }
+      });
+
+      $scope.$on('$destroy', function () {
+        $log.debug("$destroy");
+        deregisterGoToPreviousState();
+      });
+
+      /**
+       * Function that overrides the hardbackbutton behavior
+       */
+      function goToPreviousState(e) {
+        if (!!e) {
+          e.preventDefault();
+        }
+        return;
+      }
+
+      $scope.loginData = {};
+      $scope.appVersion = "v";
+      $scope.heightScreen = $window.screen.height;
+      $scope.forgotPassword = forgotPassword;
 
       $rootScope.$on('appVersion', function (event, appVersion) {
         $scope.appVersion += appVersion;
       });
 
-      $scope.$on('$destroy', deregisterGoToPreviousState);
-
       $scope.doLogin = function () {
         MessageService.clear();
-        var successLoginInfo;
+        // User name should be always lower case.
 
         if ($scope.loginData && $scope.loginData.username) {
           $scope.loginData.username = $scope.loginData.username.toLowerCase();
         }
 
+        var successLoginInfo;
         var loginData = angular.copy($scope.loginData);
 
-        LoadingService.show(verifyingCredentials);
+        LoadingService.show("verifying credentials");
 
         SessionService.login(loginData)
           .then(function (loginSuccess) {
-
-            LoggingService.logMessage(LoggingService.CONSTANTS.APP.OCF_LOGIN, LoggingService.CONSTANTS.CONTEXT.LOGIN_CONTROLLER, 'login', 'User successfully logged in', 'success',
-              [{'key':'user', 'value':JSON.stringify(loginSuccess)}]);
-
             successLoginInfo = loginSuccess;
+
             //set the current user
             $rootScope.user = loginSuccess;
             $rootScope.userRecoverData = {};
 
-            $rootScope.userRecoverData.fileNumber = 0;
+            // Only supplier user could login into the app
+            if ($rootScope.user.accountTypeId != 2) {
+              throw {
+                status: 500,
+                message: 'The user is not a supplier user.',
+                type: 'login'
+              };
+            }
+
+            $scope.locations = $rootScope.user.locations;
+
+            if (!$scope.locations || !$scope.locations[0].appLocations || $scope.locations[0].appLocations.length == 0) {
+              throw {
+                status: 500,
+                message: 'The user does not have access to any application.',
+                type: 'login'
+              };
+            }
 
             loginSuccess.username = loginSuccess.username.toUpperCase();
 
             LoadingService.hide();
-            LoadingService.show(remoteStorageVerification);
             console.log("Logged into Zest's WS");
 
             if (loginSuccess) {
               SessionService.setUserData(loginSuccess);
             }
 
-            return SessionService.getSessionID(loginData, loginSuccess);
+            LoggingService.logMessage(
+              LoggingService.CONSTANTS.APP.OCF_LOGIN,
+              LoggingService.CONSTANTS.CONTEXT.LOGIN_CONTROLLER,
+              'login',
+              'User successfully logged in',
+              'success',
+              [{'key': 'user', 'value': JSON.stringify(loginSuccess)}]
+            );
           })
-          .then(function (sessionID) {
+          .then(function (applicationsSuccess) {
+            var userData = SessionService.getUserData($rootScope.user.id);
 
-            SessionService.setSessionID(sessionID);
+            $scope.appsList = userData.locations;
+            $rootScope.stagingConfiguration = undefined;
 
-            $rootScope.userRecoverData.sessionId = sessionID;
+            return StagingConfigurationService.getStagingConfiguration();
+          })
+          .then(function (response) {
+            LoadingService.hide();
+            $rootScope.stagingConfiguration = response;
+
+            return SessionService.clearCredentials();
+          })
+          .then(function () {
+            SessionService.setCredentials(loginData, successLoginInfo);
+
+            console.log("setting logged user");
+            SessionService.setLoggedUserId($rootScope.user.id);
+
+            //TODO: change the way to save this data
+            SessionService.setUserApplications($scope.appsList);
+
+            SessionService.setHeaderCommon();
 
             //call the WS to retrieve the list of apps available for the user
             return SessionService.getApplicationsList();
+
           })
           .then(function (applicationsSuccess) {
-            LoadingService.hide();
-            LoadingService.show(settingUp);
-            $scope.appsList = applicationsSuccess;
-
-            $rootScope.userRecoverData.appsList = applicationsSuccess;
-
-            return SessionService.ocfManager.applicationConfig(loginData, applicationsSuccess, successLoginInfo.locations);
+            $rootScope.appsList = applicationsSuccess;
+            $rootScope.userRecoverData.appsList = $rootScope.appsList;
+            return UserPreferenceService.getUserPreference($rootScope.user.id);
           })
-          .then(function (configs) {
-            console.log("Configuration object available");
+          .then(function (response) {
+            $rootScope.userConfiguration = response;
 
-            SessionService.clearCredentials().then(function () {
-              SessionService.setCredentials(loginData, successLoginInfo);
+            if ($rootScope.userConfiguration.preferences.language != undefined) {
+              $translate.use($rootScope.userConfiguration.preferences.language);
+              switch ($rootScope.userConfiguration.preferences.language) {
+                case 'es':
+                  $rootScope.selectedLanguage = "Spanish";
+                  break;
+                case 'en':
+                  $rootScope.selectedLanguage = "English";
+                  break;
+              }
+            } else {
+              $rootScope.selectedLanguage = "English";
+              $translate.use('en');
+            }
+            return OCFConfigurationService.retrieveConfigs();
+          })
+          .then(function (ocfConfigs) {
+            //Getting configuration
+            $rootScope.ocfConfigs = ocfConfigs;
 
-              console.log("setting logged user");
-              SessionService.setLoggedUserId($rootScope.user.id);
+            $scope.checkDevice = !!ocfConfigs.filterAppListByDeviceModel;
 
-              //TODO: change the way to save this data
-              SessionService.setUserApplications($scope.appsList);
-            });
+            $rootScope.checkDevice = $scope.checkDevice;
+            $rootScope.filterAppListByDeviceModel = $scope.filterAppListByDeviceModel;
 
-            //Iinitialize the DB
-            DataLayerService.initialize(false)
-              .then(function (success) {
-                LoadingService.hide();
+            if ($scope.locations.length == 1) {
+              $rootScope.selectedLocation = angular.copy($scope.locations[0]);
 
-                $rootScope.locations = SessionService.getUserLocations($rootScope.user.id);
-                $rootScope.apps = SessionService.getUserApplications($rootScope.user.id);
-
-                LoggingService.logMessage(LoggingService.CONSTANTS.APP.OCF_LOGIN, LoggingService.CONSTANTS.CONTEXT.LOGIN_CONTROLLER, 'login', 'Getting locations', 'success',
-                  [{'key':'locations', 'value':JSON.stringify($rootScope.locations)}]);
-                LoggingService.logMessage(LoggingService.CONSTANTS.APP.OCF_LOGIN, LoggingService.CONSTANTS.CONTEXT.LOGIN_CONTROLLER, 'login', 'Getting apps', 'success',
-                  [{'key':'apps', 'value':JSON.stringify($rootScope.apps)}]);
-
-                //TEST
-                /*var lastLocation = $rootScope.locations.pop();
-                $rootScope.locations = [];
-                $rootScope.locations.push(lastLocation);*/
-                //TEST
-
-
-                //TODO remove it when the J19 is configured
-                /*J19*/
-                /*var j19App = {
-                  "parentAppName":"Retailer",
-                  "appName":"J19",
-                  "appCacheName":"j19"
-                };
-
-                $rootScope.apps.push(j19App);*/
-                /*J19*/
-
-                $rootScope.apps.forEach(function (app) {
-                  if (app.appCacheName == 'retailer_baseline') {
-                    app.navigateTo = navigateTo.retailer;
-                  } else if (app.appCacheName == 'j19') {
-                    app.navigateTo = navigateTo.j19;
-                  } else if (app.appCacheName == 'j18') {
-                    app.navigateTo = navigateTo.j18.home;
-                  }
-                });
-
-                if ($scope.locations.length == 1) {
-
-                  $rootScope.selectedLocation = angular.copy($rootScope.locations[0]);
-
-                  LoggingService.logMessage(LoggingService.CONSTANTS.APP.OCF_LOGIN, LoggingService.CONSTANTS.CONTEXT.LOGIN_CONTROLLER, 'auto_select_location', 'Only one location, skipping screen', 'success',
-                    [{'key':'location', 'value':JSON.stringify($rootScope.selectedLocation)}]);
-
-                  if ($scope.apps.length == 1) {
-
-                    $rootScope.app = angular.copy($rootScope.apps[0]);
-                    $rootScope.app.appCacheName = $rootScope.app.appCacheName.toUpperCase();
-
-                    LoggingService.logMessage(LoggingService.CONSTANTS.APP.OCF_LOGIN, LoggingService.CONSTANTS.CONTEXT.LOGIN_CONTROLLER, 'auto_select_app', 'Only one app, skipping screen', 'success',
-                      [{'key':'application', 'value':JSON.stringify($rootScope.app)}]);
-
-                    $rootScope.app.navigateTo();
-
-                  } else {
-
-                    LoggingService.logMessage(LoggingService.CONSTANTS.APP.OCF_LOGIN, LoggingService.CONSTANTS.CONTEXT.LOGIN_CONTROLLER, 'transition_to_app_select', 'Go to App Selector', 'success',
-                      [{'key':'applications', 'value':JSON.stringify($scope.apps)}]);
-
-                    navigateTo.home();
-                  }
-
-                } else {
-
-                  LoggingService.logMessage(LoggingService.CONSTANTS.APP.OCF_LOGIN, LoggingService.CONSTANTS.CONTEXT.LOGIN_CONTROLLER, 'transition_to_location_selector', 'Go to Location Selector', 'success',
-                    [{'key':'locations', 'value':JSON.stringify($scope.locations)}]);
-
-                  navigateTo.gdc();
+              $scope.subApps = [
+                {
+                  appName: "Shipping",
+                  appCacheName: 'G10',
+                  supportedDevice: /^TC7.+/
+                },
+                {
+                  appName: "PutAway",
+                  appCacheName: 'G04',
+                  supportedDevice: /^MC92N0$/
                 }
+              ];
+
+              var supplierApps = [];
+
+              _.remove($scope.subApps, function (app) {
+                return !_.find($rootScope.appsList, {"appName": app.appCacheName});
               });
-          })
-          .catch(function (err) {
 
-            var user = {
-              'key': 'user',
-              'value':$scope.loginData.username
-            };
+              supplierApps = _.map($scope.subApps, 'appCacheName');
 
-            var error = {
-              'key': 'error',
-              'value':JSON.stringify(err)
-            };
+              $rootScope.apps = _.filter($rootScope.selectedLocation.appLocations, function (app) {
+                return supplierApps.indexOf(app.application) != -1;
+              });
 
-            //LoggingService.logMessage(LoggingService.CONSTANTS.APP.OCF_LOGIN, LoggingService.CONSTANTS.CONTEXT.LOGIN_CONTROLLER, 'login', 'Error on login', 'error', [user, error]);
+              _.forEach($rootScope.apps, function (app, index) {
+                var subApp = _.find($scope.subApps, {"appCacheName": app.application});
+                $rootScope.apps[index].supportedDevice = subApp.supportedDevice;
+              });
 
-            if (!(err.type === 'remoteStorage' && err.status == 401)) {
-              switch (err.status){
-                case 0:
-                  MessageService.addErrorMessage("No connection available", true);
-                      break;
-                case 99:
-                  MessageService.addErrorMessage(err.message, true);
-                      break;
-                default:
-                  var readableMessage = err.message + " (code: " + err.status + ")";
-                  MessageService.addErrorMessage(readableMessage, true);
-                      break;
+              if (!$scope.deviceModel && window.device) {
+                $scope.deviceModel = window.device.model;
               }
 
-              console.log("Offline Login disabled");
-              //offlineLoginChecker(err, loginData);
+              // Filters app that do not belong to the current Device
+              if ($scope.deviceModel && $scope.checkDevice) _.remove($rootScope.apps, function (app) {
+                var isValidApp = new RegExp(app.supportedDevice);
+                return !$scope.deviceModel.match(isValidApp);
+              });
+
+              if ($rootScope.apps.length != 1) {
+                if ($rootScope.apps.length) {
+                  $log.debug('Login Screen - More than an app, going to app selection screen', JSON.stringify($rootScope.apps));
+                  navigateTo.home();
+                } else {
+                  $log.debug('Login Screen - No apps available');
+                  navigateTo.login();
+                }
+
+              } else {
+                var availableApp = $rootScope.apps[0];
+                var appIndex = _.findIndex($scope.subApps, {"appCacheName": availableApp.application});
+
+                if (appIndex == -1) {
+                  $log.debug('Login Screen - No valid app available for the current user');
+                  $scope.userLogout();
+
+                } else {
+                  $scope.subApps[appIndex].selected = true;
+                  $rootScope.app = angular.copy($scope.subApps[appIndex]);
+                  $rootScope.app.appCacheName = $rootScope.app.appCacheName.toUpperCase();
+                  $rootScope.isPilot = $rootScope.app.appName == "Shipping";
+                  $rootScope.appLocationId = availableApp.idUUID;
+
+                  LoggingService.logMessage(
+                    LoggingService.CONSTANTS.APP.OCF_LOGIN,
+                    LoggingService.CONSTANTS.CONTEXT.LOGIN_CONTROLLER,
+                    'auto_select_location',
+                    'Only one location, skipping screen',
+                    'success',
+                    [{'key': 'location', 'value': JSON.stringify($rootScope.selectedLocation)}]
+                  );
+
+                  navigateTo[availableApp.application.toLowerCase()]();
+                }
+              }
 
             } else {
-              console.log("CouchDB password not correct, will update");
+              LoggingService.logMessage(
+                LoggingService.CONSTANTS.APP.OCF_LOGIN,
+                LoggingService.CONSTANTS.CONTEXT.LOGIN_CONTROLLER,
+                'login',
+                'Going to location selector',
+                'success',
+                {}
+              );
 
-              $scope.getUser(loginData).then(function (remoteStorageSuccess) {
-                console.log("User exists on CouchDB");
-                return SessionService.remoteStorage.userCanAccessDatabase(loginData);
-
-              })
-                .then(function (remoteAccessGranted) {
-                  console.log("User is allowed to write on CouchDB");
-                  return SessionService.ocfManager.applicationConfig(loginData, 'lotqc');
-
-                })
-                .then(function (configs) {
-                  console.log("Configuration object available");
-                  SessionService.clearCredentials().then(function () {
-                    SessionService.setCredentials(loginData, successLoginInfo);
-                    SessionService.setLoggedOnline();
-                  });
-
-                  //var db = pouchLocalDB.get();
-                  //if (!db) {
-                  //  db = pouchDB(PouchConfig.pouchdbName);
-                  //  pouchLocalDB.set(db);
-                  //}
-
-                  $scope.loginData = {};
-
-
-                  $scope.locations = SessionService.getUserLocations($rootScope.user.id);
-
-                  if ($scope.locations.length == 1) {
-                    $rootScope.selectedLocation = angular.copy($scope.locations[0]);
-                    navigateTo.e30.menu();
-                  }
-                  else {
-                    navigateTo.e30.packhouse();
-                  }
-
-                })
-                .catch(function (err) {
-                  MessageService.addErrorMessage("Failed to setup remote storage", true);
-                  console.log(err);
-                })
-
+              navigateTo.locationSelector();
             }
           })
-          .finally(function (done) {
+          .catch(function (error) {
+            if (!(error.type === 'remoteStorage' && error.status == 401)) {
+              $log.error(error);
+
+              switch (error.status) {
+                case 0:
+                  MessageService.addErrorMessage("No connection available", true);
+                  break;
+                case 99:
+                  MessageService.addErrorMessage(error.message, true);
+                  break;
+                default:
+                  var readableMessage = error.message + " (code: " + error.status + ")";
+                  MessageService.addErrorMessage(readableMessage, true);
+                  break;
+              }
+
+              LoggingService.logMessage(
+                LoggingService.CONSTANTS.APP.OCF_LOGIN,
+                LoggingService.CONSTANTS.CONTEXT.LOGIN_CONTROLLER,
+                'login',
+                'Fail to login',
+                'error',
+                [
+                  {'key': 'error', 'value': JSON.stringify(error)}
+                ]
+              );
+            }
+          })
+          .finally(function () {
             LoadingService.hide();
             $scope.loginData = {};
           });
       };
 
       function forgotPassword() {
+        LoggingService.logMessage(
+          LoggingService.CONSTANTS.APP.OCF_LOGIN,
+          LoggingService.CONSTANTS.CONTEXT.LOGIN_CONTROLLER,
+          'login',
+          'Going to forgot password screen',
+          'success',
+          {}
+        );
         navigateTo.forgotPassword();
-      }
-
-      /**
-       * Handles the goBack action triggered by menu or HW Back Button
-       */
-      function goToPreviousState(e) {
-        // in the login screen back button should do nothing more than closing the keyboard
-        e.preventDefault();
-
-        if($scope.autoLogoutPopup && $scope.autoLogoutPopup.isShown()) {
-          $scope.autoLogoutPopup.close();
-
-          $window.localStorage.setItem('sessionExpired', 'false');
-        }
-      }
+      };
 
       $rootScope.$on('dataRecover', function () {
 
@@ -357,16 +447,19 @@ angular.module('ocf.login', [
         var dataRecoverParam = dataRecover != undefined ? dataRecover : {};
 
         LoggingService.logMessage(LoggingService.CONSTANTS.APP.OCF_DATA_RECOVER, LoggingService.CONSTANTS.CONTEXT.ON_DATA_RECOVERING, 'onDataRecover callback',
-          'Checking if there is data to recover', 'success', [{'key':'dataRecover','value':JSON.stringify(dataRecoverParam)}], false);
+          'Checking if there is data to recover', 'success', [{
+            'key': 'dataRecover',
+            'value': JSON.stringify(dataRecoverParam)
+          }], false);
 
-        if(dataRecover && dataRecover.hasToRecover) {
+        if (dataRecover && dataRecover.hasToRecover) {
 
-          dataRecover.hasToRecover =  false;
+          dataRecover.hasToRecover = false;
 
           var user = dataRecover.loginData.user;
           var userRecoverData = dataRecover.loginData.userRecoverData;
 
-          if(user && userRecoverData) {
+          if (user && userRecoverData) {
 
             $rootScope.user = angular.copy(user);
 
@@ -376,28 +469,37 @@ angular.module('ocf.login', [
 
             var currentTime = new Date().getTime();
             var pausedDate = new Date(dataRecover.createdDateTime).getTime();
-            var logoutTimeoutMilliseconds = SessionService.getUserData(user.id).logoutTimeoutMilliseconds;
+            var logoutTimeoutMilliseconds = dataRecover.loginData.configuration.userInactivityTimeout;
             var timeout = !!logoutTimeoutMilliseconds ? logoutTimeoutMilliseconds : 0;
+
+            $rootScope.stagingConfiguration = dataRecover.loginData.configuration;
 
             timeout = pausedDate + timeout;
 
             // User should be logged out as the timeout for background has ended.
-            if(currentTime >= timeout) {
+            if (currentTime >= timeout) {
               LoggingService.logMessage(LoggingService.CONSTANTS.APP.OCF_DATA_RECOVER, LoggingService.CONSTANTS.CONTEXT.ON_DATA_RECOVERING, 'onDataRecover callback',
-                'User should be logged out as the timeout for background has ended', 'success', [{'key':'dataRecover', 'value':JSON.stringify(dataRecover)},
-                  {'key':'logoutTimeoutMilliseconds', 'value':logoutTimeoutMilliseconds}], false);
+                'User should be logged out as the timeout for background has ended', 'success', [{
+                  'key': 'dataRecover',
+                  'value': JSON.stringify(dataRecover)
+                },
+                  {'key': 'logoutTimeoutMilliseconds', 'value': logoutTimeoutMilliseconds}], false);
 
               window.localStorage.setItem("dataRecover", JSON.stringify({}));
 
               $rootScope.$emit('logout', true);
             } else {
               LoggingService.logMessage(LoggingService.CONSTANTS.APP.OCF_DATA_RECOVER, LoggingService.CONSTANTS.CONTEXT.ON_DATA_RECOVERING, 'onDataRecover callback',
-                'Has to recover', 'success', [{'key':'dataRecover', 'value':JSON.stringify(dataRecover)}], false);
+                'Has to recover', 'success', [{'key': 'dataRecover', 'value': JSON.stringify(dataRecover)}], false);
 
               var selectedLocation = dataRecover.loginData.selectedLocation;
               var selectedApp = dataRecover.loginData.selectedApp;
+              var selectedLanguage = dataRecover.loginData.selectedLanguage;
               var locations = dataRecover.loginData.locations;
               var apps = dataRecover.loginData.apps;
+              var checkDevice = dataRecover.loginData.checkDevice;
+              var filterAppListByDeviceModel = dataRecover.loginData.filterAppListByDeviceModel;
+              var userConfiguration = dataRecover.loginData.userConfiguration;
 
               delete dataRecover.loginData;
               delete dataRecover.hasToRecover;
@@ -406,12 +508,12 @@ angular.module('ocf.login', [
               window.localStorage.setItem("dataRecover", JSON.stringify(dataRecover));
 
               $rootScope.userRecoverData = userRecoverData;
+              $rootScope.appsList = userRecoverData.appsList;
+              $rootScope.userConfiguration = userConfiguration;
 
-              //$rootScope.userRecoverData.fileNumber = userRecoverData.fileNumber;
-
-              SessionService.setHeaderCommon();
-
-              SessionService.setSessionID(userRecoverData.sessionId);
+              $rootScope.ocfConfigs = {
+                filterAppListByDeviceModel: filterAppListByDeviceModel
+              };
 
               SessionService.clearCredentials().then(function () {
 
@@ -422,65 +524,134 @@ angular.module('ocf.login', [
                 SessionService.setCredentials(loginData, user);
                 SessionService.setLoggedUserId(user.id);
                 SessionService.setUserApplications(userRecoverData.appsList);
+                SessionService.setHeaderCommon();
               });
 
-              //Iinitialize the DB
-              DataLayerService.initialize(true)
-                .then(function (success) {
+              $rootScope.selectedLanguage = selectedLanguage;
 
-                  $rootScope.locations = locations;
-                  $rootScope.apps = apps;
+              if (!selectedLanguage) {
+                $rootScope.selectedLanguage = "English";
+                $translate.use('en');
+              }
 
-                  $rootScope.apps.forEach(function (app) {
-                    if (app.appCacheName == 'retailer_baseline') {
-                      app.navigateTo = navigateTo.retailer;
-                    } else if (app.appCacheName == 'j19') {
-                      app.navigateTo = navigateTo.j19;
-                    } else if (app.appCacheName == 'j18') {
-                      app.navigateTo = navigateTo.j18.home;
-                    }
-                  });
+              if (selectedLocation || locations.length == 1) {
 
-                  if(selectedApp) {
-                    apps.forEach(function (appFromApps) {
-                      if (selectedApp.appName == appFromApps.appName) {
-                        selectedApp.navigateTo = appFromApps.navigateTo;
-                      }
-                    });
+                var locToSelect = selectedLocation;
+
+                if (!selectedLocation) {
+                  locToSelect = locations[0];
+                }
+
+                $rootScope.selectedLocation = angular.copy(locToSelect);
+
+                $scope.subApps = [
+                  {
+                    appName: "Shipping",
+                    appCacheName: 'G10',
+                    supportedDevice: /^TC7.+/
+                  },
+                  {
+                    appName: "PutAway",
+                    appCacheName: 'G04',
+                    supportedDevice: /^MC92N0$/
                   }
+                ];
 
-                  if(selectedLocation || locations.length == 1) {
+                var supplierApps = [];
 
-                    var locToSelect = selectedLocation;
-
-                    if(!selectedLocation) {
-                      locToSelect = locations[0];
-                    }
-
-                    $rootScope.selectedLocation = angular.copy(locToSelect);
-
-                    if(selectedApp || apps.length == 1) {
-
-                      var appToSelect = selectedApp;
-
-                      if(!selectedApp) {
-                        appToSelect = apps[0];
-                      }
-
-                      $rootScope.app = angular.copy(appToSelect);
-                      $rootScope.app.appCacheName = selectedApp.appCacheName.toUpperCase();
-
-                      $rootScope.app.navigateTo();
-                    } else {
-                      navigateTo.home();
-                    }
-                  } else {
-                    navigateTo.gdc();
-                  }
+                _.remove($scope.subApps, function (app) {
+                  return !_.find($rootScope.appsList, {"appName": app.appCacheName});
                 });
+
+                supplierApps = _.map($scope.subApps, 'appCacheName');
+
+                $rootScope.apps = _.filter($rootScope.selectedLocation.appLocations, function (app) {
+                  return supplierApps.indexOf(app.application) != -1;
+                });
+
+                _.forEach($rootScope.apps, function (app, index) {
+                  var subApp = _.find($scope.subApps, {"appCacheName": app.application});
+                  $rootScope.apps[index].supportedDevice = subApp.supportedDevice;
+                });
+
+                if (!$scope.deviceModel && window.device) {
+                  $scope.deviceModel = window.device.model;
+                }
+
+                // Filters app that do not belong to the current Device
+                if ($scope.deviceModel && checkDevice) _.remove($rootScope.apps, function (app) {
+                  var isValidApp = new RegExp(app.supportedDevice);
+                  return !$scope.deviceModel.match(isValidApp);
+                });
+
+                if ($rootScope.apps.length != 1 && !selectedApp) {
+                  if ($rootScope.apps.length) {
+                    $log.debug('Login Screen - More than an app, going to app selection screen', JSON.stringify($rootScope.apps));
+                    navigateTo.home();
+                  } else {
+                    $log.debug('Login Screen - No apps available');
+                    navigateTo.login();
+                  }
+
+                } else {
+
+                  var selectedAppIndex = selectedApp != undefined ? _.findIndex($rootScope.apps, {"application": selectedApp.appCacheName}) : 0;
+
+                  if(selectedAppIndex != -1) {
+                    $rootScope.app = $rootScope.apps[selectedAppIndex];
+                  } else {
+                    $rootScope.app = $rootScope.apps[0];
+                  }
+
+                  var availableApp = $rootScope.app;
+                  var appIndex = _.findIndex($scope.subApps, {"appCacheName": availableApp.application});
+
+                  if (appIndex == -1) {
+                    $log.debug('Login Screen - No valid app available for the current user');
+                    $scope.userLogout();
+
+                  } else {
+                    $scope.subApps[appIndex].selected = true;
+                    $rootScope.app = angular.copy($scope.subApps[appIndex]);
+                    $rootScope.app.appCacheName = $rootScope.app.appCacheName.toUpperCase();
+                    $rootScope.isPilot = $rootScope.app.appName == "Shipping";
+                    $rootScope.appLocationId = availableApp.idUUID;
+
+                    LoggingService.logMessage(
+                      LoggingService.CONSTANTS.APP.OCF_LOGIN,
+                      LoggingService.CONSTANTS.CONTEXT.LOGIN_CONTROLLER,
+                      'auto_select_location',
+                      'Only one location, skipping screen',
+                      'success',
+                      [{'key': 'location', 'value': JSON.stringify($rootScope.selectedLocation)}]
+                    );
+
+                    navigateTo[availableApp.application.toLowerCase()]();
+                  }
+                }
+
+              } else {
+                LoggingService.logMessage(
+                  LoggingService.CONSTANTS.APP.OCF_LOGIN,
+                  LoggingService.CONSTANTS.CONTEXT.LOGIN_CONTROLLER,
+                  'login',
+                  'Going to location selector',
+                  'success',
+                  {}
+                );
+
+                navigateTo.locationSelector();
+              }
             }
+          } else {
+            $rootScope.$broadcast('checkNewVersion');
           }
+        } else {
+          $rootScope.$broadcast('checkNewVersion');
         }
       });
+
     }
-  ]);
+  ])
+
+;

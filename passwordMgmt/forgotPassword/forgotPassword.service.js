@@ -8,24 +8,11 @@ angular
 ForgotPasswordService.$inject = [
   '$q',
   '$resource',
-  '$filter',
-  '$rootScope',
-  '$ionicModal',
-  '$timeout',
-  '$window',
-  'lodash',
   'URLManager'
 ];
 
-//noinspection JSUnusedLocalSymbols
 function ForgotPasswordService($q,
                                $resource,
-                               $filter,
-                               $rootScope,
-                               $ionicModal,
-                               $timeout,
-                               $window,
-                               lodash,
                                URLManager) {
   var fps = this;
 

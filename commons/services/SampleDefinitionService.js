@@ -22,24 +22,24 @@ function SampleDefinitionService(lodash, SessionService, $rootScope) {
   };
 
 
+
   dataModel.getSampleDefinitionId = function (product) {
 
     var configObject = SessionService.ocfManager.getApplicationConfig($rootScope.selectedLocation.locationId, $rootScope.app.appCacheName).config;
 
     //match the productProfile-sampleDefinition pair with the corresponding sampleDefinition
     if (configObject.lots[0] && configObject.lots[0] && configObject.lots[0].profileLocation && configObject.lots[0].profileLocation.length) {
-      var profileLocation = lodash.find(configObject.lots[0].profileLocation, function (pl) {
+      var profileLocation =  lodash.find(configObject.lots[0].profileLocation, function (pl) {
         return pl.produceProfileId == product.id;
       });
     }
 
-    if (profileLocation) {
+    if (profileLocation){
       return profileLocation.sampleDefinitionId;
     }
   }
 
   dataModel.dynamicDataStructure = function (product) {
-    dataModel.ds = angular.copy(cleanDataModel); // resets "ds" object (as it retains data from previous usages)
 
     var configObject = {};
 
@@ -74,8 +74,6 @@ function SampleDefinitionService(lodash, SessionService, $rootScope) {
     //for (var i = 0; i < gc.values.length; i++) {
     var screen = gc;
 
-    dataModel.ds.shared = gc.shared ? gc.shared : false;
-
     if (typeof screen.ispicturegroup == "undefined") {
       $rootScope.$broadcast('noAttributes');
       return;
@@ -103,7 +101,6 @@ function SampleDefinitionService(lodash, SessionService, $rootScope) {
         var mode = undefined;
         var isPercentage = false;
         var isOptional = false;
-        var parameterOptions = {};
 
         if (options !== undefined) {
           evalOptions(options);
@@ -143,6 +140,10 @@ function SampleDefinitionService(lodash, SessionService, $rootScope) {
 
           }
 
+          //if (s != undefined && previousSamples.length > 0) {
+          //  data.value = calculateAvg(s, data.name);
+          //}
+          //else
           if (default_value !== undefined) {
             data.value = Number(default_value);
           }
@@ -150,9 +151,6 @@ function SampleDefinitionService(lodash, SessionService, $rootScope) {
           if (dataModel.ds.groups.indexOf(valueType) === -1) {
             this.ds.groups.push(valueType);
           }
-
-          data.options = parameterOptions;
-
           dataModel.ds.data.push(data);
 
         } else if (_index !== -1) {
@@ -188,8 +186,6 @@ function SampleDefinitionService(lodash, SessionService, $rootScope) {
               data.value = Number(default_value);
             }
 
-            data.options = parameterOptions;
-
             dataModel.ds.data.push(data);
           }
 
@@ -213,8 +209,7 @@ function SampleDefinitionService(lodash, SessionService, $rootScope) {
               data.value = default_value;
             }
 
-          }
-          else {
+          } else {
             //range
 
             //if (s != undefined && previousSamples.length > 0) {
@@ -222,16 +217,13 @@ function SampleDefinitionService(lodash, SessionService, $rootScope) {
             //}
             //else
             if (default_value !== undefined) {
-              data.value = default_value;
+              data.value = Number(default_value);
             }
 
             data.validity.percentage = isPercentage;
 
             data.validity.range = value.descriptors;
           }
-
-
-          data.options = parameterOptions;
 
           dataModel.ds.data.push(data);
         }
@@ -266,9 +258,6 @@ function SampleDefinitionService(lodash, SessionService, $rootScope) {
           if (opt[0] === 'optional') {
             isOptional = true;
           }
-
-          //if it doesn't match any of the previous options, then add it as it's a new type
-          parameterOptions[opt[0]] = opt[1];
 
         });
       }
@@ -393,7 +382,6 @@ function SampleDefinitionService(lodash, SessionService, $rootScope) {
         data.adjusted = true;
       }
 
-      data.options = parameterOptions;
       dataModel.ds.data.push(data);
     }
 

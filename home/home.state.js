@@ -8,7 +8,6 @@ function Configure($stateProvider) {
   $stateProvider
     .state('ocf.home', {
       url: "/home",
-      cache: false,
       views: {
         "ocf": {
           controller: 'HomeController',

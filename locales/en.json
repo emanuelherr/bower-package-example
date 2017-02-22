@@ -71,7 +71,7 @@
             "MIN_LOWERCASE": "lowercase letter",
             "MIN_SPECIAL": "special character",
             "BE_AT_LEAST_SINGLE": "be at least one character long",
-            "BE_AT_LEAST_MULTIPLE": "be at least {{number}} characters long",
+            "BE_AT_LEAST_MULTIPLE": "be at least {{number}} characters,",
             "CONTAIN_AT_LEAST": "contain at least",
             "AND": "and"
           },
@@ -108,14 +108,15 @@
 
     "NO_CONNECTIVITY_POPUP": {
       "HEADER": "Connection Error",
-      "MESSAGE": "Scan again or tap Retry",
+      "MESSAGE": "Retry again",
       "CLOSE_BUTTON": "Close",
       "RETRY_BUTTON": "Retry"
     },
 
     "TOASTER": {
       "INVALID_INPUT": "Invalid Input",
-      "MESSAGE": "Scan ZIPR Tag ID"
+      "MESSAGE": "Scan ZIPR Tag ID",
+      "NO_INTERNET": "OFFLINE"
     },
 
     "AUTO_LOGOUT": {
@@ -130,6 +131,29 @@
       "REOPENING": "Reopening Order",
       "CLOSING": "Closing Order",
       "LOADING": "Loading ..."
+    },
+    "LANGUAGE_SELECTOR":{
+      "SELECT_LANGUAGE": "Select Language",
+      "LANGUAGES":{
+        "SPANISH":"Spanish",
+        "ENGLISH":"English"
+      }
+    },
+    "SIDE_MENU":{
+      "USER":"Logged in as:",
+      "LOGOUT": "Logout",
+      "CHANGE_PASSWORD":"Change Password",
+      "LANGUAGE": "Language",
+      "LANGUAGES":{
+        "SPANISH":"Spanish",
+        "ENGLISH":"English"
+      }
+    },
+    "MESSAGES":{
+      "LOADING":"Loading..."
+    },
+    "APPLICATION_BUSY":{
+     "MESSAGE" : "Application busy"
     }
   }
 }

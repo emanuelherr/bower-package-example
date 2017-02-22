@@ -1,8 +1,8 @@
 /**
-  * Created by FMG on 11/03/2016.
-  */
+ * Created by FMG on 11/03/2016.
+ */
 angular
-  .module('retailer.services')
+  .module('supplier.services')
   .service('AutoLogoutPopupService', AutoLogoutPopupService);
 
 AutoLogoutPopupService.$inject = ['$q', '$ionicModal', 'lodash', '$log', '$rootScope', '$ionicBackdrop', '$window'];

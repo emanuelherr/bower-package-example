@@ -7,28 +7,28 @@
             </div>
 
             <messages class="hide-on-keyboard-open text-align-center"
-                      ng-class="{'messages-hidden':messages.error.length==0}" messages="messages"></messages>
+                      ng-class="{'messages-hidden':messages.error.length==0, 'text-align-center-pa': heightScreen < 480}" messages="messages"></messages>
 
             <form class="form-login" ng-submit="doLogin()">
                 <div>
-                    <label class="item item-input" ng-class="{'error-input': messages.error.length>0}">
-                        <input type="text" placeholder="{{'OCF.LOGIN.USERNAME_PLACEHOLDER' | translate}}" ng-model="loginData.username">
-                    </label>
-                    <label class="item item-input">
-                        <input type="password" placeholder="{{'OCF.LOGIN.PASSWORD_PLACEHOLDER' | translate}}" ng-model="loginData.password">
-                    </label>
-                    <label>
-                        <button class="login-button" type="submit" translate="OCF.LOGIN.LOGIN_BUTTON"></button>
-                    </label>
+                    <div class="item item-input " id="usernameLabel" ng-class="{'error-input': messages.error.length>0}">
+                        <input id="usernameInput" type="text" placeholder="{{form.username}}" ng-focus="" ng-model="loginData.username">
+                    </div>
+                    <div class="item item-input" id="passwordLabel">
+                        <input id="passwordInput" type="password" placeholder="{{form.password}}" ng-model="loginData.password">
+                    </div>
+
+                    <button class="login-button" type="submit" translate="OCF.LOGIN.LOGIN_BUTTON"></button>
+
                 </div>
             </form>
         </div>
 
-        <div class="forgot-password" ng-click="forgotPassword()" translate="OCF.LOGIN.FORGOT_PASSWORD"></div>
+        <div class="forgot-password" ng-class="{'forgot-password-pa': heightScreen < 480 }" ng-click="forgotPassword()" translate="OCF.LOGIN.FORGOT_PASSWORD"></div>
 
-        <div class="row login-footer" id="login-footer">
-            <label class="col col-50 text-align-left label-footer">© ZEST Fresh 2016</label>
-            <label class="col col-25 text-align-right label-footer">{{appVersion}}</label>
+        <div class="row login-footer" ng-class="{'login-footer-pa': heightScreen < 480 }" id="login-footer">
+            <label class="col col-50 text-align-left label-footer" ng-class="{'text-align-center-pa': heightScreen < 480 }">© ZEST Fresh 2016</label>
+            <label class="col col-25 text-align-right label-footer" ng-class="{'text-align-center-pa': heightScreen < 480 }">{{appVersion}}</label>
         </div>
     </ion-content>
 </ion-view>
