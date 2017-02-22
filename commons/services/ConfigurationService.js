@@ -23,7 +23,7 @@ function ConfigurationService($rootScope, CouchBaseConfig, URLManager, Environme
     return {
       "dbName": "user_",
       "syncUrl": CouchBaseConfig.host + CouchBaseConfig.name, //sync gateway url
-      "usePouchDB": false,
+      "usePouchDB": true,
       "autoSync": true,
       "tagMask": ['330C4DE261100280']
     };
